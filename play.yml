@@ -1,0 +1,11 @@
+- hosts: record-servers
+  roles:
+    - name: docker
+      tags: docker
+
+    - name: nfs
+      tags: nfs
+
+    - name: mackerelio.mackerel-agent
+      tags: mackerel
+      become: yes

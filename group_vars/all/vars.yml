@@ -1,0 +1,10 @@
+mackerel_agent_apikey: "{{ vault_mackerel_agent_apikey }}"
+mackerel_agent_roles:
+  - "record:app"
+mackerel_use_plugins: yes
+mackerel_agent_display_name: "{{ inventory_hostname }}"
+
+mackerel_agent_plugins:
+  docker: "mackerel-plugin-docker -host unix:///var/run/docker.sock -name-format name"
+  uptime: "mackerel-plugin-uptime"
+

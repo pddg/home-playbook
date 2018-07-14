@@ -1,0 +1,24 @@
+---
+galaxy_info:
+  author: Hatena Co., Ltd.
+  description: Install mackerel agent
+  company: Hatena Co., Ltd.
+  license: Apache2
+  min_ansible_version: 1.2
+  platforms:
+  - name: EL
+    versions:
+      - 7
+      - 6
+  - name: Ubuntu
+    versions:
+    - trusty
+    - xenial
+  - name: Debian
+    versions:
+    - wheezy
+    - jessie
+    - stretch
+  categories:
+    - monitoring
+dependencies: []

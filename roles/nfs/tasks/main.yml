@@ -1,0 +1,16 @@
+- block:
+  - name: Install nfs-common
+    apt:
+      name: nfs-common
+      state: present
+    become: True
+
+  - name: Mout record dir
+    mount:
+      name: /mnt/record
+      src: puffer.poyo.info:/data/record
+      fstype: nfs
+      state: mounted
+    become: True
+
+  tags: nfs_setup
