@@ -1,0 +1,5 @@
+
+- name: clean_artifacts
+  make:
+    chdir: "{{ pt3_repo_dest }}"
+    target: clean

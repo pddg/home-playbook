@@ -1,0 +1,87 @@
+---
+- name: Disable default driver
+  lineinfile:
+    path: /etc/modprobe.d/blacklist.conf
+    line: "blacklist earth-pt3"
+    state: present
+  register: pt3_disable_default
+  become: yes
+
+- name: reboot
+  reboot:
+    post_reboot_delay: 15
+  become: yes
+  when: pt3_disable_default.changed
+
+- name: Install DKMS
+  apt:
+    name: dkms
+  become: yes
+
+- name: Clone repository
+  git:
+    repo: "https://github.com/m-tsudo/pt3"
+    dest: "{{ pt3_repo_dest }}"
+
+- name: Obtain installed pt3 driver
+  shell: "lsmod | grep pt3"
+  register: pt3_installed_driver
+  changed_when: false
+  ignore_errors: true
+
+- name: Show installed driver
+  debug:
+    var: pt3_installed_driver.stdout_lines
+
+- block:
+
+  - name: Build pt3 driver
+    make:
+      chdir: "{{ pt3_repo_dest }}"
+    register: pt3_drv_create
+    when: pt3_installed_driver.stdout_lines | length == 0
+
+  - name: Install pt3 driver
+    make:
+      chdir: "{{ pt3_repo_dest }}"
+      target: install
+      file: "{{ pt3_repo_dest }}/Makefile"
+    register: pt3_driver_install
+    become: yes
+    when: pt3_drv_create.changed
+
+  - name: reboot
+    reboot:
+      post_reboot_delay: 15
+    become: yes
+    when: pt3_driver_install.changed
+
+  rescue:
+    - name: Clean artifacts
+      make:
+        chdir: "{{ pt3_repo_dest }}"
+        target: clean
+
+- name: Obtain DKMS managed driver
+  shell: "dkms status | grep pt3"
+  register: pt3_dkms_managed
+  changed_when: false
+  ignore_errors: true
+
+- name: Show dkms managed driver
+  debug:
+    var: pt3_dkms_managed.stdout_lines
+ 
+- name: enable_dkms
+  shell: "bash ./dkms.install"
+  args:
+    chdir: "{{ pt3_repo_dest }}"
+  register: pt3_enable_dkms
+  when: pt3_dkms_managed.stdout == ""
+  become: yes
+
+- name: reboot
+  reboot:
+    post_reboot_delay: 15
+  become: yes
+  when: pt3_enable_dkms is succeeded and pt3_enable_dkms is not skipped

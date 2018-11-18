@@ -1,0 +1,5 @@
+- hosts: record-servers
+  roles:
+    - name: PT3
+      tags: pt3
+

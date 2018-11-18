@@ -1,0 +1,3 @@
+---
+pt3_repo_dest: "{{ ansible_env.HOME }}/drivers/pt3"
+
