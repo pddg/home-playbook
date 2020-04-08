@@ -1,0 +1,8 @@
+---
+- name: Enable chrony service (systemd)
+  systemd:
+    name: "{{ chrony_daemon }}"
+    daemon_reload: yes
+    enabled: yes
+    state: started
+  become: yes

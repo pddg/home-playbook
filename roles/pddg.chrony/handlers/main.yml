@@ -1,0 +1,13 @@
+---
+- name: restart_chrony_with_systemd
+  systemd:
+    name: "{{ chrony_daemon }}"
+    state: restarted
+    daemon_reload: yes
+  become: yes
+
+- name: restart_chrony_with_upstart
+  service:
+    name: "{{ chrony_daemon }}"
+    state: restarted
+  become: yes

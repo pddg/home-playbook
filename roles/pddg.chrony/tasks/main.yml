@@ -1,0 +1,19 @@
+---
+- block:
+
+  - name: Include distribution specific variables
+    include_vars: "{{ ansible_os_family | lower }}.yml"
+
+  - name: Install dependencies
+    include_tasks: "{{ ansible_os_family | lower }}_install.yml"
+
+  - name: Copy configuration file
+    template:
+      src: 'templates/chrony.conf.j2'
+      dest: '{{ chrony_config }}'
+    become: yes
+    notify:
+      - "restart_chrony_with_{{ ansible_service_mgr | lower }}"
+
+  - name: Ensure that chronyd is enabled and started
+    include_tasks: "{{ ansible_service_mgr | lower }}.yml"

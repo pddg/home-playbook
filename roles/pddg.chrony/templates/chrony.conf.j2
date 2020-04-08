@@ -1,0 +1,62 @@
+# {{ ansible_managed }}
+
+# List of NTP servers to use.
+{% for server in chrony_ntp_servers %}
+server {{ server }} iburst
+{% endfor %}
+
+# Ignore stratum in source selection.
+stratumweight 0
+
+# Record the rate at which the system clock gains/losses time.
+driftfile {{ chrony_driftfile }}
+
+{% if chrony_rtcsync_enable %}
+# Enable kernel RTC synchronization.
+rtcsync
+{% endif %}
+
+# In first three updates step the system clock instead of slew
+# if the adjustment is larger than 10 seconds.
+makestep {{ chrony_step_config.threshold }} {{ chrony_step_config.trial }}
+
+{% if chrony_maxslewrate is defined %}
+slewrate {{ chrony_maxslewrate }}
+{% endif %}
+
+{% if chrony_access_list is defined %}
+# Allow NTP client access from local network.
+{% for allow_network in chrony_access_list.allow %}
+allow {{ allow_network }}
+{% endfor %}
+{% for deny_network in chrony_access_list.deny %}
+deny {{ deny_network }}
+{% endfor %}
+{% endif %}
+
+# Listen for commands only on localhost by default.
+{% for addr in chrony_bind_cmd_addresses %}
+bindcmdaddress {{ addr }}
+{% endfor %}
+
+# Serve time even if not synchronized to any NTP server.
+#local stratum 10
+
+keyfile {{ chrony_keyfile }}
+
+# Specify the key used as password for chronyc.
+commandkey {{ chrony_command_key }}
+
+# Generate command key if missing.
+generatecommandkey
+
+{% if chrony_client_log_enable %}
+# Disable logging of client accesses.
+noclientlog
+{% endif %}
+
+# Send a message to syslog if a clock adjustment is larger than 0.5 seconds.
+logchange {{ chrony_log_threshold }}
+
+logdir {{ chrony_log_location }}
+#log measurements statistics tracking

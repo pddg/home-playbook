@@ -1,0 +1,31 @@
+---
+galaxy_info:
+  author: pddg
+  role_name: chrony
+  description: ansible-role-chrony
+  company: StudioAquatan
+
+  license: MIT
+
+  min_ansible_version: 2.7
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+        - xenial
+        - trusty
+    - name: EL
+      versions:
+        - 7
+    - name: Debian
+      versions:
+        - jessie
+        - stretch
+
+  galaxy_tags:
+    - chrony
+    - time
+    - ntp
+
+dependencies: []

@@ -1,0 +1,10 @@
+---
+avahi_tools:
+  - avahi-daemon
+  - avahi-utils
+  - avahi-discover
+  - libnss-mdns
+
+avahi_restart_services:
+  - nscd
+  - nslcd

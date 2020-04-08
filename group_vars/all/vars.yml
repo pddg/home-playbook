@@ -9,3 +9,15 @@ mackerel_agent_plugins:
   uptime: "mackerel-plugin-uptime"
   sensors: "ruby /home/pudding/mackerel/mackerel-plugins/sensors/temperature-metrics.rb"
 
+mackerel_check_plugins:
+  chinachu:
+    command: "check-http --user pudding:shoma7712 -u http://oryza.local:10772"
+    check_interval: 5
+    max_check_attempts: 3
+    notification_interval: "\"1h\""
+  mirakurun:
+    command: "check-tcp -H oryza.local -p 40772"
+    check_interval: 5
+    max_check_attempts: 3
+    notification_interval: "\"1h\""
+

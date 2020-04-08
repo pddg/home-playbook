@@ -1,0 +1,11 @@
+---
+- name: Restart services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  listen: Restart mdns relative services
+  loop: "{{ avahi_restart_services }}"
+
+- name: Ping {{ inventory_hostname_short }}.local
+  shell: "ping -c 3 {{ inventory_hostname_short }}.local"
+  listen: Restart mdns relative services

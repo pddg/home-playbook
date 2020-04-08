@@ -1,0 +1,9 @@
+# Ignore ansible related files
+*.log
+*.retry
+
+# Ignore test artifacts
+tests/*
+!tests/Vagrantfile
+!tests/test.yml
+

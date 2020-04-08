@@ -1,0 +1,7 @@
+---
+- name: Enable chrony service (upstart)
+  service:
+    name: "{{ chrony_daemon }}"
+    state: started
+    enabled: yes
+  become: yes

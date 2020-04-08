@@ -1,0 +1,41 @@
+---
+# List of ntp server to obtain date information
+chrony_ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+  - 2.pool.ntp.org
+  - 3.pool.ntp.org
+
+# Location to logging
+chrony_log_location: /var/log/chrony
+
+# makestep {{ thresholt }} {{ trial }}
+chrony_step_config:
+  threshold: 10
+  trial: 3
+
+# Enable or disable rtcsync
+chrony_rtcsync_enable: yes
+
+# Set max slew rate
+# chrony_maxslewrate: 500
+
+# Whitelist and blacklist to access
+# chrony_access_list:
+#   allow:
+#     - 127.0.0.1
+#   deny:
+#     - all
+
+chrony_bind_cmd_addresses:
+  - "127.0.0.1"
+  - "::1"
+
+# Specify the key used as password for chronyc
+chrony_command_key: 1
+
+# Enable or disable client log
+chrony_client_log_enable: no
+
+# Logging threshold
+chrony_log_threshold: 0.5

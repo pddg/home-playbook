@@ -1,0 +1,55 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+    boxes = [
+        {
+            :name => "debian-jessie",
+            :box => "debian/jessie64",
+            :host_vars => {}
+        },
+        {
+            :name => "debian-stretch",
+            :box => "debian/stretch64",
+            :host_vars => {}
+        },
+        {
+            :name => "ubuntu-trusty",
+            :box => "ubuntu/trusty64",
+            :host_vars => {}
+        },
+        {
+            :name => "ubuntu-xenial",
+            :box => "ubuntu/xenial64",
+            :host_vars => {
+                "ansible_python_interpreter" => "/usr/bin/python3"
+            }
+        },
+        {
+            :name => "ubuntu-bionic",
+            :box => "ubuntu/bionic64",
+            :host_vars => {
+                "ansible_python_interpreter" => "/usr/bin/python3"
+            }
+        },
+        {
+            :name => "centos-7",
+            :box => "centos/7",
+            :host_vars => {}
+        }
+    ]
+    host_vars = {}
+    boxes.each do |opts|
+        config.vm.define opts[:name] do |config|
+            config.vm.box = opts[:box]
+            host_vars[opts[:name]] = opts[:host_vars]
+            if opts[:name] == boxes.last[:name]
+                config.vm.provision "ansible" do |ansible|
+                    ansible.playbook = "test.yml"
+                    ansible.limit = "all"
+                    ansible.host_vars = host_vars
+                end
+            end
+        end
+    end
+end
