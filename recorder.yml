@@ -1,5 +1,15 @@
-- hosts: record-servers
+- hosts: record_servers
   roles:
+    - name: docker
+      tags: docker
+
+    - name: nfs
+      tags: nfs
+
+    - name: mackerelio.mackerel-agent
+      tags: mackerel
+      become: yes
+
     - name: PT3
       tags: pt3
 
@@ -12,3 +22,6 @@
           - ntp2.jst.mfeed.ad.jp
           - ntp3.jst.mfeed.ad.jp
 
+    - name: mirakurun
+      tags: mirakurun
+      become: yes

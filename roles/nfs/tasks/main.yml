@@ -8,7 +8,7 @@
   - name: Mout record dir
     mount:
       name: /mnt/record
-      src: puffer.poyo.info:/data/record
+      src: puffer.local:/data/record
       fstype: nfs
       state: mounted
     become: True

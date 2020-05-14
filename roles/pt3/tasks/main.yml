@@ -15,6 +15,7 @@
 
 - name: Install DKMS
   apt:
+    cache_valid_time: 3600
     name: dkms
   become: yes
 
