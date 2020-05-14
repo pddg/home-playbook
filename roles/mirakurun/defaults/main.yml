@@ -1,0 +1,5 @@
+---
+mirakurun_port: 40772
+mirakurun_log_level: 2
+mirakurun_base_dir: "/opt/mirakurun"
+

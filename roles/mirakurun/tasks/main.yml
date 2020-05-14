@@ -1,0 +1,66 @@
+---
+- name: Mirakurun config and data dir exists
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ mirakurun_base_dir }}"
+    - "{{ mirakurun_base_dir }}/conf"
+    - "{{ mirakurun_base_dir }}/db"
+
+- name: Mirakurun channel and tuner config exists
+  copy:
+    src: "{{ item }}"
+    dest: "{{ mirakurun_base_dir }}/conf/"
+  loop:
+    - "files/channels.yml"
+    - "files/tuners.yml"
+
+- name: Mirakurun server config exists
+  template:
+    src: "templates/server.yml.j2"
+    dest: "{{ mirakurun_base_dir }}/conf/server.yml"
+
+- name: Mirakurun network is created
+  docker_network:
+    name: mirakurun
+
+- name: Dockerfile of mirakurun exists
+  copy:
+    src: "files/Dockerfile"
+    dest: "{{ mirakurun_base_dir }}/"
+
+- name: Mirakurun docker image is built
+  docker_image:
+    name: mirakurun
+    tag: latest
+    build:
+      path: "{{ mirakurun_base_dir }}"
+      pull: yes
+    source: build
+
+# 公式Mirakurunコンテナはまだpcscdとrecpt1の同梱に対応していない
+# - name: Mirakurun docker image is pulled
+#   docker_image:
+#     name: chinachu/mirakurun
+#     tag: latest
+#     source: pull
+
+- name: Mirakurun container is started
+  docker_container:
+    name: mirakurun
+    image: "mirakurun:latest"
+    networks:
+      - name: mirakurun
+    ports:
+      - "{{ mirakurun_port }}:{{ mirakurun_port }}"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "{{ mirakurun_base_dir }}/conf:/usr/local/etc/mirakurun"
+      - "{{ mirakurun_base_dir }}/db:/usr/local/var/db/mirakurun"
+    networks_cli_compatible: no
+    env:
+      TZ: "Asia/Tokyo"
+    restart_policy: unless-stopped
+    privileged: true
+
