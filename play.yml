@@ -9,3 +9,12 @@
     - name: mackerelio.mackerel-agent
       tags: mackerel
       become: yes
+
+    - name: pddg.chrony
+      tags: chrony
+      vars:
+        chrony_ntp_servers:
+          - ntp.nict.jp
+          - ntp1.jst.mfeed.ad.jp
+          - ntp2.jst.mfeed.ad.jp
+          - ntp3.jst.mfeed.ad.jp

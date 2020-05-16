@@ -1,27 +1,39 @@
 - hosts: record_servers
   roles:
-    - name: docker
-      tags: docker
-
-    - name: nfs
-      tags: nfs
-
-    - name: mackerelio.mackerel-agent
-      tags: mackerel
-      become: yes
-
     - name: PT3
       tags: pt3
 
-    - name: pddg.chrony
-      tags: chrony
-      vars:
-        chrony_ntp_servers:
-          - ntp.nict.jp
-          - ntp1.jst.mfeed.ad.jp
-          - ntp2.jst.mfeed.ad.jp
-          - ntp3.jst.mfeed.ad.jp
+    - name: docker
+      tags: docker
 
     - name: mirakurun
       tags: mirakurun
       become: yes
+      vars:
+        mirakurun_port: 40772
+
+    - name: mariadb_docker
+      tags: mariadb
+      vars:
+        mariadb_version: 10.5.3-bionic
+        mariadb_volume_name: epg-db
+        mariadb_network_name: mirakurun
+        mariadb_container_name: epg-db
+        mariadb_start_command: "mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci --performance-schema=false --expire_logs_days=1"
+        mariadb_user: "epgstation"
+        mariadb_password: "epgstation"
+        mariadb_root_password: "epgstation"
+        mariadb_database: "epgstation"
+
+    - name: epgstation
+      tags: epgstation
+      vars:
+        epg_port: 8888
+        epg_recorded_path: "/mnt/record"
+        epg_mirakurun_host: mirakurun
+        epg_mirakurun_network: mirakurun
+        epg_mirakurun_port: 40772
+        epg_mysql_host: "{{ mariadb_container_name }}"
+        epg_mysql_user: "{{ mariadb_user }}"
+        epg_mysql_password: "{{ mariadb_password }}"
+        epg_mysql_database: "{{ mariadb_database }}"
