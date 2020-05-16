@@ -1,2 +1,7 @@
 *.log
+ssh/*
+!ssh/.git-keep
+
+.fact_caches
+.DS_Store
 
