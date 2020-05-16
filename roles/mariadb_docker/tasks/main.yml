@@ -1,0 +1,33 @@
+---
+- name: MariaDB image is pulled
+  docker_image:
+    name: mariadb
+    tag: "{{ mariadb_version }}"
+    source: pull
+
+- name: MariaDB volume is created
+  docker_volume:
+    name: "{{ mariadb_volume_name }}"
+
+- name: MariaDB container network is created
+  docker_network:
+    name: "{{ mariadb_network_name }}"
+
+- name: MariaDB server container is started
+  docker_container:
+    name: "{{ mariadb_container_name }}"
+    image: "mariadb:{{ mariadb_version }}"
+    command: "{{ mariadb_start_command | default(omit) }}"
+    volumes:
+      - "{{ mariadb_volume_name }}:/var/lib/mysql"
+    networks:
+      - name: "{{ mariadb_network_name }}"
+    env:
+      MYSQL_USER: "{{ mariadb_user }}"
+      MYSQL_PASSWORD: "{{ mariadb_password }}"
+      MYSQL_ROOT_PASSWORD: "{{ mariadb_root_password }}"
+      MYSQL_DATABASE: "{{ mariadb_database }}"
+      TZ: "Asia/Tokyo"
+    networks_cli_compatible: no
+    restart_policy: unless-stopped
+

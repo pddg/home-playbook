@@ -1,0 +1,21 @@
+---
+mariadb_version: 10.5.3-bionic
+
+# データを永続化するためのDocker Volume名
+mariadb_volume_name: "mariadb"
+
+# 所属するDocker network
+mariadb_network_name: "mariadb"
+
+# mariadbコンテナの名前
+mariadb_container_name: "mariadb"
+
+# サーバ起動時のコマンド
+# 何も入力しなければDockerfileのデフォルト
+# mariadb_start_command: "mysqld"
+
+# サーバ内のユーザ
+mariadb_user: mariadb
+mariadb_password: mariadb
+mariadb_root_password: mariadb
+mariadb_database: mariadb
