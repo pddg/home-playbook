@@ -1,0 +1,90 @@
+---
+- name: EPGStation base directories are created
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user_uid | string }}"
+    group: "{{ ansible_user_gid | string }}"
+  loop:
+    - "{{ epg_base_dir }}"
+    - "{{ epg_base_dir }}/config"
+    - "{{ epg_base_dir }}/data"
+    - "{{ epg_base_dir }}/logs"
+    - "{{ epg_base_dir }}/thumbnail"
+  become: yes
+
+- name: Logging configs exist
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ ansible_user_uid | string }}"
+    group: "{{ ansible_user_gid | string }}"
+  loop:
+    - src: "files/serviceLogConfig.json"
+      dest: "{{ epg_base_dir }}/config/"
+    - src: "files/operatorLogConfig.json"
+      dest: "{{ epg_base_dir }}/config/"
+
+- name: Encode script exists
+  template:
+    src: "{{ item }}"
+    dest: "{{ epg_base_dir }}/{{ (item | basename | splitext).0 }}"
+    owner: "{{ ansible_user_uid | string }}"
+    group: "{{ ansible_user_gid | string }}"
+  with_fileglob: "templates/*.sh.j2"
+
+- name: Config of EPGStation is up-to-date
+  template:
+    src: "templates/config.json.j2"
+    dest: "{{ epg_base_dir }}/config/config.json"
+    owner: "{{ ansible_user_uid | string }}"
+    group: "{{ ansible_user_gid | string }}"
+  notify:
+    - Restart EPGStation container
+
+- name: Dockerfile of EPGStation exists
+  copy:
+    src: "files/Dockerfile"
+    dest: "{{ epg_base_dir }}/"
+    owner: "{{ ansible_user_uid | string }}"
+    group: "{{ ansible_user_gid | string }}"
+  register: epg_dockerfile
+
+- name: EPGStation docker image is built
+  docker_image:
+    name: epgstation
+    tag: latest
+    build:
+      args:
+        CPUCORE: "{{ ansible_processor_cores }}"
+      path: "{{ epg_base_dir }}"
+      pull: yes
+    source: build
+    force_source: "{{ epg_dockerfile.changed | bool }}"
+
+- name: EPGStation container is started
+  docker_container:
+    name: epgstation
+    image: "epgstation:latest"
+    networks:
+      - name: "{{ epg_mirakurun_network }}"
+    ports:
+      - "{{ epg_port }}:{{ epg_port }}"
+      - "{{ epg_port + 1 }}:{{ epg_port + 1 }}"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "{{ epg_base_dir }}/config:/usr/local/EPGStation/config"
+      - "{{ epg_base_dir }}/data:/usr/local/EPGStation/data"
+      - "{{ epg_base_dir }}/thumbnail:/usr/local/EPGStation/thumbnail"
+      - "{{ epg_base_dir }}/logs:/usr/local/EPGStation/logs"
+      - "{{ epg_recorded_path }}:/usr/local/EPGStation/recorded"
+    devices:
+      - "/dev/dri:/dev/dri"
+    networks_cli_compatible: no
+    env:
+      TZ: "Asia/Tokyo"
+    restart_policy: unless-stopped
+    user: "{{ ansible_user_uid | string }}:{{ ansible_user_gid | string }}"
+    groups:
+      - video
+

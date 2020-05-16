@@ -1,0 +1,45 @@
+---
+epg_base_dir: "/opt/epgstation"
+epg_port: 8888
+
+# 利用するMirakurunの情報
+epg_mirakurun_host: mirakurun
+epg_mirakurun_port: 40772
+# Mirakurunが動作しているDocker network
+epg_mirakurun_network: mirakurun
+
+# 接続するDBの設定
+epg_mysql_host: mysql
+epg_mysql_port: 3306
+epg_mysql_user: epgstation
+epg_mysql_password: epgstation
+epg_mysql_database: epgstation
+
+# 録画ファイルの保存場所
+epg_recorded_path: "{{ epg_base_dir }}/recorded"
+
+# 録画ファイルのファイル名フォーマット
+# https://github.com/l3tnun/EPGStation/blob/master/doc/conf-manual.md#%E9%8C%B2%E7%94%BB%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%81%AE%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%90%8D%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88
+epg_recorded_format: "%YEAR%-%MONTH%-%DAY%_%CHID%_%CHNAME%_%TITLE%"
+
+# 録画先の容量がいっぱいになったときの挙動
+# no - 何もしない
+# remove - 古い物から削除
+epg_storage_limit_action: "remove"
+
+# 録画先の空き容量の閾値(MB)
+epg_storage_limit_threshold: "20480"
+
+# HWエンコードに使用するデバイスへのパス
+epg_vaapi_device: /dev/dri/card0
+
+# EPGStationをリバースプロキシで公開し、サブディレクトリで運用する場合の設定
+epg_behind_proxy: no
+epg_published_directory: ""
+
+# no - error
+# twoByte - 全て全角にする
+# oneByte - 英数字記号を半角にする
+# oneByteWithCH - チャンネル番号も含めて半角にする
+epg_convert_db_str: "oneByteWithCH"
+

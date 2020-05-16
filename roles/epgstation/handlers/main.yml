@@ -1,0 +1,5 @@
+---
+- name: Restart EPGStation container
+  docker_container:
+    name: epgstation
+    restart: yes
