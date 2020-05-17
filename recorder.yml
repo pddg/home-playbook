@@ -1,6 +1,17 @@
 - hosts: record_servers
   roles:
-    - name: PT3
+    - name: autofs
+      tags: autofs
+      vars:
+        autofs_mount_points:
+          - path: /mnt
+            mounts:
+              - name: record
+                fstype: nfs,sync,rw
+                address: puffer.local
+                export: /data/record
+
+    - name: pt3
       tags: pt3
 
     - name: docker
@@ -37,3 +48,17 @@
         epg_mysql_user: "{{ mariadb_user }}"
         epg_mysql_password: "{{ mariadb_password }}"
         epg_mysql_database: "{{ mariadb_database }}"
+
+    - name: chinachu
+      tags: chinachu
+      vars:
+        mirakurun_container_name: "mirakurun"
+        mirakurun_port: 40772
+        chinachu_version: "b2003a88e0557d45ae839f229491cb15543a8d24"
+        chinachu_enable_vaapi: yes
+        chinachu_vaapi_device: "/dev/dri/card0"
+        chinachu_networks:
+          - "mirakurun"
+        chinachu_recorded_path: "/mnt/record"
+        chinachu_low_space_storage:
+          threshold: 30000
