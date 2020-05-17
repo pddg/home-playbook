@@ -1,0 +1,17 @@
+---
+- name: Restart autofs
+  listen: restart_autofs
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: autofs
+  when: ansible_service_mgr == 'systemd'
+  become: yes
+
+- name: Restart autofs (Backward compatibility for non-systemd dist)
+  listen: restart_autofs
+  service:
+    state: restarted
+    name: autofs
+  when: ansible_service_mgr != 'systemd'
+  become: yes

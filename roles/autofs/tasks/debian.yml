@@ -1,0 +1,33 @@
+---
+- name: Install autofs
+  apt:
+    name: autofs
+    cache_valid_time: 3600
+  become: yes
+
+- name: Add auto.master
+  template:
+    src: 'templates/auto.master.j2'
+    dest: '/etc/auto.master'
+    owner: root
+    group: root
+    mode: 0644
+  become: yes
+  notify: restart_autofs
+
+- name: Ensure mount configurations
+  template:
+    src: 'templates/auto.option.j2'
+    dest: '/etc/auto{{ item.path.split("/") | join(".") }}'
+    owner: root
+    group: root
+    mode: 0644
+  become: yes
+  with_items: '{{ autofs_mount_points }}'
+  notify: restart_autofs
+
+- name: Autofs daemon started
+  service:
+    name: autofs
+    state: started
+  become: yes

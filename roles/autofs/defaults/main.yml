@@ -1,0 +1,28 @@
+# マウントしたいNFSサーバの情報
+#
+# autofs_mount_points:
+#   - path: マウントするパス
+#     name: マウントポイントの名前
+#     fstype: マウントするファイルシステムのオプション
+#     address: NFSサーバのアドレス
+#     export: サーバ上でexportされているパス
+#
+# 少しわかりにくいが，
+#
+# autofs_mount_points:
+#   - path: /home
+#     name: hoge
+#     fstype: nfs,sync,rw
+#     address: example.com
+#     export: /export/home
+#
+# なら，
+#
+# - example.com上の/export/homeを，
+# - NFS・書き込み可能・同期的書き込みというオプションで，
+# - クライアントの/home/hogeへマウントする．
+#
+# NOTE:
+# `path`は`/`でsplitした後，`.`で連結して設定ファイル名に使用する
+# （例： /home/hoge -> .home.hoge）
+# そのため，空白等を考慮していない．含めないこと．

@@ -1,0 +1,5 @@
++dir:/etc/auto.master.d
++auto.master
+{% for mount in autofs_mount_points %}
+{{ mount.path }} auto{{ mount.path.split("/") | join(".") }}
+{% endfor %}

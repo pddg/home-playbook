@@ -1,0 +1,4 @@
+{% for mount_point in item.mounts %}
+{{ mount_point.name }} -fstype={{ mount_point.fstype }} {{ mount_point.address }}:{{ mount_point.export }}
+{% endfor %}
+
