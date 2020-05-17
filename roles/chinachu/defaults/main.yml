@@ -1,0 +1,55 @@
+---
+chinachu_container_name: "chinachu"
+# Chinachuリポジトリのブランチ名やコミットを指定できる
+chinachu_version: "gamma"
+
+# Chinachuを公開するポート
+chinachu_port: 10772
+
+# Chinachuをホストとのポートフォワーディングを使用して公開する
+chinachu_enable_forwarding: yes
+
+# Chinachuを無認証で公開する（推奨）
+chinachu_is_open_server: yes
+
+# 上記設定が`no`の場合のみ、認証ユーザを設定することができる
+# 廃止予定の機能であり非推奨
+# chinachu_wui_users:
+#   - name: akari
+#     password: bakuhatsu
+
+# ホスト上のChinachu関連ファイルの置き場所
+chinachu_base_dir: "/opt/chinachu"
+
+# ホスト上の録画ファイルの置き場所
+chinachu_recorded_path: "{{ chinachu_base_dir }}/recorded"
+# 録画ファイル名フォーマット
+# https://github.com/Chinachu/Chinachu/wiki/Configuration-recordedFormat
+chinachu_recorded_format: "[<date:yymmdd-HHMM>][<type><channel>][<tuner>]<title>.m2ts"
+
+# Chinachu containerの実行ユーザ
+chinachu_user: "{{ ansible_user_uid | string }}"
+chinachu_group: "{{ ansible_user_gid | string }}"
+
+# コンテナの所属するネットワーク
+chinachu_networks: []
+
+# HWアクセラレーションを有効にする
+chinachu_enable_vaapi: no
+# 上記がyesのとき、使用するデバイスを指定する
+chinachu_vaapi_device: ""
+
+# ストレージ容量が少なくなってきたときの挙動
+chinachu_low_space_storage:
+  # 空き容量の閾値（MB）
+  threshold: 3000
+  # 閾値を下回ったときの挙動
+  # yes - 古いものから順に削除
+  # no - 何もしない
+  remove_old: yes
+  # 容量低下時の通知先
+  # notify_to: ""
+  #
+  # 容量低下時に実行するコマンド
+  # https://github.com/Chinachu/Chinachu/wiki/Configuration-recordedCommand
+  # command: ""

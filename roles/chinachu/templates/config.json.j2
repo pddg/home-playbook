@@ -1,0 +1,59 @@
+{# https://github.com/Chinachu/Chinachu/wiki/Gamma-Configuration #}
+{
+  "uid" : "{{ chinachu_user }}",
+  {# VAAPIデバイスを使うためにvideoグループへの所属が必要 #}
+  {% if chinachu_enable_vaapi %}
+  "gid": "video",
+  {% else %}
+  "gid" : "{{ chinachu_group }}",
+  {% endif %}
+  {# 録画ファイル置き場はDockerコンテナのボリュームマウントで設定する #}
+  "recordedDir" : "/usr/local/chinachu/recorded/",
+  "recordedFormat": "{{ chinachu_recorded_format }}",
+
+  {% if chinachu_wui_users is defined %}
+  "wuiUsers": [
+    {% for user in chinachu_wui_users %}
+    "{{ user.name }}:{{ user.password }}"
+    {% endfor %}
+  ],
+  {% endif %}
+  "wuiAllowCountries": ["JP"],
+
+  "wuiOpenServer"       : {{ chinachu_is_open_server | bool | ternary("true", "false")}},
+  {% if chinachu_is_open_server %}
+  "wuiOpenHost"         : "::",
+  "wuiOpenPort"         : {{ chinachu_port }},
+  {% else %}
+  "wuiHost"             : "::",
+  "wuiPort"             : {{ chinachu_port }},
+  {% endif %}
+  "wuiTlsKeyPath"       : null,
+  "wuiTlsCertPath"      : null,
+  "wuiXFF"              : false,
+  "wuiPreviewer"        : true,
+  "wuiStreamer"         : true,
+  "wuiFiler"            : true,
+  "wuiConfigurator"     : true,
+  "wuiMdnsAdvertisement": false,
+
+  "mirakurunPath": "http://{{ mirakurun_container_name }}:{{ mirakurun_port }}/",
+
+  {% if chinachu_enable_vaapi %}
+  "vaapiEnabled": {{ chinachu_enable_vaapi | bool | ternary("true", "false") }},
+  "vaapiDevice": "{{ chinachu_vaapi_device }}",
+  {% endif %}
+
+  {# ストレージ容量に関する設定 #}
+  "storageLowSpaceAction": "{{ chinachu_low_space_storage.remove_old | default(true) | bool | ternary('remove', 'none') }}",
+  "storageLowSpaceThresholdMB": {{ chianchu_low_space_storage.threshold | default(3000) }},
+  {% if chianchu_low_space_storage.notify_to is defined %}
+  "storageLowSpaceNotifyTo": {{ chianchu_low_space_storage.notify_to }},
+  {% endif %}
+  {% if chianchu_low_space_storage.command is defined %}
+  "storageLowSpaceCommand": {{ chianchu_low_space_storage.command }},
+  {% endif %}
+
+  {# JSONの末尾カンマの問題を避けるために置いておく #}
+  "temporaryDir": "/tmp/"
+}

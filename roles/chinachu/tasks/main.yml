@@ -1,0 +1,86 @@
+---
+- name: Chinachu base directory exists
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ chinachu_user }}"
+    group: "{{ chinachu_group }}"
+  loop:
+    - "{{ chinachu_base_dir }}"
+    - "{{ chinachu_base_dir }}/conf"
+    - "{{ chinachu_base_dir }}/data"
+    - "{{ chinachu_base_dir }}/log"
+  become: yes
+
+- name: rules.json exists
+  stat:
+    path: "{{ chinachu_base_dir }}/conf/rules.json"
+  register: chinachu_rules
+
+- name: Default rules.json is created
+  copy:
+    dest: "{{ chinachu_base_dir }}/conf/rules.json"
+    content: "[]"
+    owner: "{{ chinachu_user }}"
+    group: "{{ chinachu_group }}"
+  when: not chinachu_rules.stat.exists
+
+- name: Configuration is up-to-date
+  template:
+    src: "templates/config.json.j2"
+    dest: "{{ chinachu_base_dir }}/conf/config.json"
+    owner: "{{ chinachu_user }}"
+    group: "{{ chinachu_group }}"
+  notify:
+    - Restart chinachu container
+
+- name: Service start script exists
+  copy:
+    src: "files/start-service.sh"
+    dest: "{{ chinachu_base_dir }}/start-service.sh"
+    owner: "{{ chinachu_user }}"
+    group: "{{ chinachu_group }}"
+  notify:
+    - Restart chinachu container
+
+- name: Dockerfile of chinachu exists
+  template:
+    src: "templates/Dockerfile.j2"
+    dest: "{{ chinachu_base_dir }}/Dockerfile"
+    owner: "{{ chinachu_user }}"
+    group: "{{ chinachu_group }}"
+  register: chinachu_dockerfile
+
+- name: Chinachu docker image is built
+  docker_image:
+    name: chinachu
+    tag: "{{ chinachu_version }}"
+    build:
+      args:
+        CPUCORE: "{{ ansible_processor_cores }}"
+      path: "{{ chinachu_base_dir }}"
+      pull: yes
+    source: build
+    force_source: "{{ chinachu_dockerfile.changed | bool }}"
+
+- name: Chinachu container is started
+  docker_container:
+    name: "{{ chinachu_container_name }}"
+    image: "chinachu:{{ chinachu_version }}"
+    networks: |
+      [{% for net in chinachu_networks %}{{ {'name': net } }},{% endfor %}]
+    ports: "{{ chinachu_enable_forwarding | bool | ternary([chinachu_port|string + ':' + chinachu_port|string], []) }}"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "{{ chinachu_base_dir }}/conf/config.json:/usr/local/chinachu/config.json"
+      - "{{ chinachu_base_dir }}/conf/rules.json:/usr/local/chinachu/rules.json"
+      - "{{ chinachu_base_dir }}/data:/usr/local/chinachu/data"
+      - "{{ chinachu_base_dir }}/log:/usr/local/chinachu/log"
+      - "{{ chinachu_recorded_path }}:/usr/local/chinachu/recorded"
+    devices: "{{ chinachu_enable_vaapi | bool | ternary([chinachu_vaapi_device + ':' + chinachu_vaapi_device], []) }}"
+    groups: "{{ chinachu_enable_vaapi | bool | ternary(['video'], []) }}"
+    networks_cli_compatible: no
+    env:
+      TZ: "Asia/Tokyo"
+    restart_policy: unless-stopped
+    user: "{{ chinachu_user }}:{{ chinachu_group }}"

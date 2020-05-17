@@ -1,0 +1,101 @@
+FROM debian:buster-slim
+ARG CPUCORE="4"
+
+LABEL maintainer "pddg"
+
+ENV DEV="software-properties-common make gcc git g++ automake curl wget autoconf build-essential python3 libass-dev libfreetype6-dev libsdl1.2-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo zlib1g-dev python"
+ENV FFMPEG_VERSION=4.2.2
+
+# Build FFmpeg
+RUN apt-get update && \
+    apt-get -y install $DEV && \
+    {% if chinachu_enable_vaapi %}
+    apt-add-repository non-free && \
+    apt-get update && \
+    {% endif %}
+    apt-get -y install \
+        yasm \
+        libx264-dev \
+        libmp3lame-dev \
+        libopus-dev \
+        libvpx-dev \
+        libx265-dev \
+        libnuma-dev \
+        libasound2 \
+        libass9 \
+        libvdpau1 \
+        libva-x11-2 \
+        libva-drm2 \
+        libxcb-shm0 \
+        libxcb-xfixes0 \
+        libxcb-shape0 \
+        libvorbisenc2 \
+        libtheora0 \
+    {% if chinachu_enable_vaapi %}
+        libva2 \
+        i965-va-driver-shaders \
+    {% endif %}
+    && \
+    mkdir /tmp/ffmpeg_sources && \
+    cd /tmp/ffmpeg_sources && \
+    wget http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2 -O ffmpeg.tar.bz2 && \
+    tar xjvf ffmpeg.tar.bz2 && \
+    cd /tmp/ffmpeg_sources/ffmpeg* && \
+    ./configure \
+        --prefix=/usr/local \
+        --disable-shared \
+        --pkg-config-flags=--static \
+        --enable-gpl \
+        --enable-libass \
+        --enable-libfreetype \
+        --enable-libmp3lame \
+        --enable-libopus \
+        --enable-libtheora \
+        --enable-libvorbis \
+        --enable-libvpx \
+        --enable-libx264 \
+        --enable-libx265 \
+        --enable-nonfree \
+        --disable-debug \
+        --disable-doc \
+        {% if chinachu_enable_vaapi %}
+        --enable-vaapi \
+        {% endif %}
+    && \
+    cd /tmp/ffmpeg_sources/ffmpeg* && \
+    make -j${CPUCORE} && \
+    make install && \
+    apt-get -y remove $DEV && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/ffmpeg_sources
+
+# Install Chinachu
+ENV DEV="software-properties-common make gcc git g++ automake curl wget autoconf build-essential python python3"
+ENV REPOSITORY https://github.com/chinachu/Chinachu.git
+ENV BRANCH {{ chinachu_version }}
+ENV CHINACHU_DIR /usr/local/chinachu
+
+RUN apt-get update && \
+    apt-get -y install $DEV && \
+    git clone ${REPOSITORY} ${CHINACHU_DIR} && \
+    cd ${CHINACHU_DIR} && \
+    git checkout ${BRANCH} && \
+    echo 2 | ./chinachu installer && \
+    echo 3 | ./chinachu installer && \
+    echo 4 | ./chinachu installer && \
+    apt-get -y remove $DEV && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR ${CHINACHU_DIR}
+
+COPY start-service.sh ./
+
+RUN chmod a+x start-service.sh
+
+EXPOSE {{ chinachu_port }}
+ENTRYPOINT ["./start-service.sh"]
+
