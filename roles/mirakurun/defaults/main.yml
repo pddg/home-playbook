@@ -1,5 +1,21 @@
 ---
+mirakutun_container_name: mirakurun
+mirakurun_version: "2.15.2"
 mirakurun_port: 40772
 mirakurun_log_level: 2
 mirakurun_base_dir: "/opt/mirakurun"
 
+# Mirakurunの実行ユーザ
+mirakurun_user: "{{ ansible_user_uid | string }}"
+mirakurun_group: "{{ ansible_user_gid | string }}"
+
+# Mirakurunコンテナが所属するDockerネットワーク
+mirakurun_network: "mirakurun"
+
+mirakurun_tuners:
+  - /dev/pt3video0
+  - /dev/pt3video1
+  - /dev/pt3video2
+  - /dev/pt3video3
+
+mirakurun_card_reader: /dev/bus/usb

@@ -1,4 +1,6 @@
 FROM node:14-buster-slim
+ARG MIRAKURUN_VERSION="2.15.2"
+
 LABEL maintainer "pddg"
 EXPOSE 40772
 ENV DOCKER="YES"
@@ -28,7 +30,7 @@ RUN apt-get update && \
     make install && \
     npm install pm2 -g && \
     npm install arib-b25-stream-test -g --unsafe && \
-    npm install mirakurun -g --unsafe --production && \
+    npm install mirakurun@${MIRAKURUN_VERSION} -g --unsafe --production && \
     apt-get -y remove \
         libpcsclite-dev \
         build-essential \

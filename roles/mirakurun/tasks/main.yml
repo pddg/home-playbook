@@ -1,40 +1,69 @@
 ---
+- name: pcscd is stopped and disabled
+  service:
+    name: pcscd
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+  become: yes
+
 - name: Mirakurun config and data dir exists
   file:
     path: "{{ item }}"
     state: directory
+    owner: "{{ mirakurun_user }}"
+    group: "{{ mirakurun_group }}"
   loop:
     - "{{ mirakurun_base_dir }}"
     - "{{ mirakurun_base_dir }}/conf"
     - "{{ mirakurun_base_dir }}/db"
+  become: yes
 
-- name: Mirakurun channel and tuner config exists
+- name: Mirakurun tuner config exists
   copy:
-    src: "{{ item }}"
+    src: "files/tuners.yml"
     dest: "{{ mirakurun_base_dir }}/conf/"
-  loop:
-    - "files/channels.yml"
-    - "files/tuners.yml"
+    owner: "{{ mirakurun_user }}"
+    group: "{{ mirakurun_group }}"
+
+- name: Mirakurun channel config exists
+  stat:
+    path: "{{ mirakurun_base_dir }}/conf/channels.yml"
+  register: mirakurun_channels_config
+
+- name: Copy initial Mirakurun channel config
+  copy:
+    src: "files/channel.yml"
+    dest: "{{ mirakurun_base_dir }}/conf/"
+    owner: "{{ mirakurun_user }}"
+    group: "{{ mirakurun_group }}"
+  when: not mirakurun_channels_config.stat.exists
 
 - name: Mirakurun server config exists
   template:
     src: "templates/server.yml.j2"
     dest: "{{ mirakurun_base_dir }}/conf/server.yml"
+    owner: "{{ mirakurun_user }}"
+    group: "{{ mirakurun_group }}"
 
 - name: Mirakurun network is created
   docker_network:
-    name: mirakurun
+    name: "{{ mirakurun_network }}"
 
 - name: Dockerfile of mirakurun exists
   copy:
     src: "files/Dockerfile"
     dest: "{{ mirakurun_base_dir }}/"
+    owner: "{{ mirakurun_user }}"
+    group: "{{ mirakurun_group }}"
 
 - name: Mirakurun docker image is built
   docker_image:
     name: mirakurun
-    tag: latest
+    tag: "{{ mirakurun_version }}"
     build:
+      args:
+        MIRAKURUN_VERSION: "{{ mirakurun_version }}"
       path: "{{ mirakurun_base_dir }}"
       pull: yes
     source: build
@@ -48,19 +77,25 @@
 
 - name: Mirakurun container is started
   docker_container:
-    name: mirakurun
-    image: "mirakurun:latest"
+    name: "{{ mirakurun_container_name }}"
+    image: "mirakurun:{{ mirakurun_version }}"
+    capabilities:
+      - SYS_NICE
+      - SYS_ADMIN
+      - SYS_RAWIO
     networks:
-      - name: mirakurun
+      - name: "{{ mirakurun_network }}"
     ports:
       - "{{ mirakurun_port }}:{{ mirakurun_port }}"
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "{{ mirakurun_base_dir }}/conf:/usr/local/etc/mirakurun"
       - "{{ mirakurun_base_dir }}/db:/usr/local/var/db/mirakurun"
+    devices: "{{ mirakurun_tuners | union([mirakurun_card_reader]) }}"
+    groups:
+      - video
     networks_cli_compatible: no
     env:
       TZ: "Asia/Tokyo"
     restart_policy: unless-stopped
-    privileged: true
 
