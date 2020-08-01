@@ -1,0 +1,45 @@
+---
+- name: The login user is added
+  user:
+    name: "{{ raspi_user }}"
+    password: "{{ raspi_password | password_hash('sha512') }}"
+    groups:
+      - adm
+      - dialout
+      - cdrom
+      - sudo
+      - audio
+      - video
+      - plugdev
+      - games
+      - users
+      - input
+      - netdev
+      - gpio
+      - i2c
+      - spi
+    append: yes
+    shell: /bin/bash
+    update_password: on_create
+  no_log: true
+
+- name: Public key is added
+  authorized_key:
+    user: "{{ raspi_user }}"
+    key: "{{ lookup('file', 'files/public_keys/' + raspi_user + '.pub') }}"
+    state: present
+
+- include_role:
+    name: pddg.sshd_config
+
+- name: Host name is up-to-date
+  hostname:
+    name: "{{ raspi_hostname }}"
+  notify: Restart avahi daemon
+
+- name: /etc/hosts is up-to-date
+  lineinfile:
+    regexp: '^127\.0\.1\.1.*$'
+    line: "127.0.1.1 {{ raspi_hostname }}"
+    path: /etc/hosts
+  notify: Restart avahi daemon

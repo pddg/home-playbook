@@ -1,0 +1,20 @@
+galaxy_info:
+  author: pddg
+  role_name: sshd_config
+  description: Role for sshd configuration
+  company: StudioAquatan
+  license: MIT
+
+  min_ansible_version: 2.7
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+        - xenial
+
+  galaxy_tags:
+    - system
+    - sshd
+
+dependencies: []

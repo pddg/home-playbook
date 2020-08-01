@@ -1,0 +1,77 @@
+# {{ ansible_managed }}
+# Accept protocol version 2 only
+Protocol 2
+UsePAM yes
+Port {{ sshd_port }}
+
+PasswordAuthentication {% if sshd_password_auth %}yes{% else %}no{% endif %}
+
+ChallengeResponseAuthentication {% if sshd_password_auth %}yes{% else %}no{% endif %}
+
+# Do not allow to login with no password
+PermitEmptyPasswords no
+
+# Do not allow to login with root user
+PermitRootLogin no
+
+MaxAuthTries {{ sshd_max_auth_tries }}
+MaxSessions {{ sshd_max_sessions }}
+
+# Log configuration.
+SyslogFacility {{ sshd_log_facility }}
+LogLevel {{ sshd_log_level }}
+
+{% if sshd_allow_users|length > 0 %}
+# Users which are allow to login
+AllowUsers {{ sshd_allow_users | join(" ") }}
+{% endif %}
+
+{% if sshd_allow_groups|length > 0 %}
+# Groups which are allowed to login
+AllowGroups {{ sshd_allow_groups | join(" ") }}
+{% endif %}
+
+{% if sshd_deny_users|length > 0 %}
+# Users which are NOT allow to login
+DenyUsers {{ sshd_deny_users | join(" ") }}
+{% endif %}
+
+{% if sshd_deny_groups|length > 0 %}
+# Groups which are NOT allowed to login
+DenyGroups {{ sshd_deny_groups | join(" ") }}
+{% endif %}
+
+# Allow ssh port forwarding
+{% set port_forward = "yes" if sshd_allow_port_forwarding else "no" %}
+AllowTcpForwarding {{ port_forward }}
+AllowStreamLocalForwarding {{ port_forward }}
+
+# X11 Forwarding
+X11Forwarding {% if sshd_allow_x11_forwarding %}yes{% else %}no{% endif %}
+
+# Keep alive
+ClientAliveInterval {{ sshd_client_alive_interval }}
+CLientAliveCountMax {{ sshd_client_alive_count }}
+TCPKeepAlive {{ "yes" if sshd_tcp_keep_alive else "no" }}
+
+# Print prompt messages
+PrintMotd {% if sshd_print_motd %}yes{% else %}no{% endif %}
+
+PrintLastLog {% if sshd_print_last_log %}yes{% else %}no{% endif %}
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+{% if sshd_enable_sftp %}
+Subsystem       sftp    /usr/lib/openssh/sftp-server
+{% endif %}
+
+{% if sshd_match_conditions|length > 0 %}
+# Additional confirugations
+{%   for condition in sshd_match_conditions %}
+Match {{ condition.condition }}
+{%     for rule in condition.rules %}
+    {{ rule }}
+{%     endfor %}
+{%    endfor %}
+{% endif %}
