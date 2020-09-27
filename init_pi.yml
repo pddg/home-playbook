@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  connection: local
+  vars:
+    prev_fact_path: "{{ playbook_dir }}/.fact_caches/pi"
+  tasks:
+    - name: Previous facts is removed
+      file:
+        path: "{{ prev_fact_path }}"
+        state: absent
+
+- hosts: init_pi
+  become: true
+  roles:
+    - name: raspi
