@@ -19,13 +19,6 @@
     - "{{ mirakurun_base_dir }}/db"
   become: yes
 
-- name: Mirakurun tuner config exists
-  copy:
-    src: "files/tuners.yml"
-    dest: "{{ mirakurun_base_dir }}/conf/"
-    owner: "{{ mirakurun_user }}"
-    group: "{{ mirakurun_group }}"
-
 - name: Mirakurun channel config exists
   stat:
     path: "{{ mirakurun_base_dir }}/conf/channels.yml"
@@ -57,28 +50,16 @@
     owner: "{{ mirakurun_user }}"
     group: "{{ mirakurun_group }}"
 
-- name: Mirakurun docker image is built
+- name: Mirakurun docker image is pulled
   docker_image:
-    name: mirakurun
+    name: "{{ mirakurun_image }}"
     tag: "{{ mirakurun_version }}"
-    build:
-      args:
-        MIRAKURUN_VERSION: "{{ mirakurun_version }}"
-      path: "{{ mirakurun_base_dir }}"
-      pull: yes
-    source: build
-
-# 公式Mirakurunコンテナはまだpcscdとrecpt1の同梱に対応していない
-# - name: Mirakurun docker image is pulled
-#   docker_image:
-#     name: chinachu/mirakurun
-#     tag: latest
-#     source: pull
+    source: pull
 
 - name: Mirakurun container is started
   docker_container:
     name: "{{ mirakurun_container_name }}"
-    image: "mirakurun:{{ mirakurun_version }}"
+    image: "{{ mirakurun_image }}:{{ mirakurun_version }}"
     capabilities:
       - SYS_NICE
       - SYS_ADMIN

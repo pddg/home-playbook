@@ -11,9 +11,6 @@
                 address: puffer.local
                 export: /data/record
 
-    - name: pt3
-      tags: pt3
-
     - name: docker
       tags: docker
 
