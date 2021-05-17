@@ -1,0 +1,41 @@
+# {{ ansible_managed }}
+port: {{ epg_port }}
+mirakurunPath: "http://{{ epg_mirakurun_host }}:{{ epg_mirakurun_port }}/"
+
+{% if epg_use_sqlite %}
+dbtype: sqlite
+{% else %}
+dbtype: mysql
+mysql:
+  host: {{ epg_mysql_config.host | default("127.0.0.1") }}
+  port: {{ epg_mysql_config.port | default(3306) }}
+  user: {{ epg_mysql_config.user | default("epgstation") }}
+  password: {{ epg_mysql_config.password | default("epgstation") }}
+  database: {{ epg_mysql_config.database | default("epgstation") }}
+{% endif %}
+
+uid: {{ epg_user_uid }}
+gid: {{ epg_user_gid }}
+
+
+ffmpeg: /usr/local/bin/ffmpeg
+ffprobe: /usr/local/bin/ffprobe
+
+recorded:
+  - name: recorded
+    path: "%ROOT%/recorded"
+
+thumbnail: "%ROOT%/thumbnail"
+
+encodeProcessNum: {{ epg_encode_process_num }}
+
+urlscheme:
+{{ epg_url_schemes | to_nice_yaml(indent=2) | indent(width=2,indentfirst=True) }}
+
+stream:
+  live:
+{{ epg_live_stream_commands | to_nice_yaml(indent=2) | indent(width=4,indentfirst=True) }}
+  recorded:
+{{ epg_recorded_stream_commands | to_nice_yaml(indent=2) | indent(width=4,indentfirst=True) }}
+  encoded:
+{{ epg_encoded_stream_commands | to_nice_yaml(indent=2) | indent(width=4,indentfirst=True) }}

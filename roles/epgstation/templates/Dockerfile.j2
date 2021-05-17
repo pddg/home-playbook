@@ -1,0 +1,71 @@
+# This file was forked from https://github.com/l3tnun/docker-mirakurun-epgstation
+# 
+# MIT License
+# 
+# Copyright (c) 2017 l3tnun
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+FROM {{ epg_image }}
+
+ENV DEV="make gcc git g++ automake curl wget autoconf build-essential libass-dev libfreetype6-dev libsdl1.2-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo zlib1g-dev"
+ENV FFMPEG_VERSION={{ epg_ffmpeg_version }}
+
+RUN apt-get update && \
+    apt-get -y install $DEV && \
+    apt-get -y install yasm libx264-dev libmp3lame-dev libopus-dev libvpx-dev && \
+    apt-get -y install libx265-dev libnuma-dev && \
+    apt-get -y install libasound2 libass9 libvdpau1 libva-x11-2 libva-drm2 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 libvorbisenc2 libtheora0 && \
+\
+#ffmpeg build
+\
+    mkdir /tmp/ffmpeg_sources && \
+    cd /tmp/ffmpeg_sources && \
+    wget http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2 -O ffmpeg.tar.bz2 && \
+    tar xjvf ffmpeg.tar.bz2 && \
+    cd /tmp/ffmpeg_sources/ffmpeg* && \
+    ./configure \
+      --prefix=/usr/local \
+      --disable-shared \
+      --pkg-config-flags=--static \
+      --enable-gpl \
+      --enable-libass \
+      --enable-libfreetype \
+      --enable-libmp3lame \
+      --enable-libopus \
+      --enable-libtheora \
+      --enable-libvorbis \
+      --enable-libvpx \
+      --enable-libx264 \
+      --enable-libx265 \
+      --enable-nonfree \
+      --disable-debug \
+      --disable-doc \
+    && \
+    cd /tmp/ffmpeg_sources/ffmpeg* && \
+    make -j$(nproc) && \
+    make install && \
+\
+# 不要なパッケージを削除
+\
+    apt-get -y remove $DEV && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/ffmpeg_sources

@@ -10,8 +10,13 @@ mackerel_agent_plugins:
   sensors: "ruby /home/pudding/mackerel/mackerel-plugins/sensors/temperature-metrics.rb"
 
 mackerel_check_plugins:
+  epgstation:
+    command: "check-http -u http://oryza.local:8888"
+    check_interval: 5
+    max_check_attempts: 3
+    notification_interval: "\"1h\""
   chinachu:
-    command: "check-http --user pudding:shoma7712 -u http://oryza.local:10772"
+    command: "check-http -u http://oryza.local:10772"
     check_interval: 5
     max_check_attempts: 3
     notification_interval: "\"1h\""
