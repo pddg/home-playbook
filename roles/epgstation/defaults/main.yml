@@ -1,45 +1,231 @@
 ---
-epg_base_dir: "/opt/epgstation"
+# EPGStationのバージョン
+epg_version: v2.3.3
+epg_image: l3tnun/epgstation
+epg_repository: github.com/l3tnun/epgstation
+
+# EPGStationのリッスンするポート
 epg_port: 8888
+
+# リモートホスト上にconfigなどを配置するディレクトリ
+epg_base_dir: "/opt/epgstation"
+# 録画ファイルの配置場所
+epg_recorded_path: "{{ epg_base_dir }}/record"
+
+# EPGStationに関連するファイル・ディレクトリの所有者
+# Dockerコンテナもこれらのユーザを用いて実行される
+epg_user_uid: "{{ ansible_user_uid | string }}"
+epg_user_gid: "{{ ansible_user_gid | string }}"
 
 # 利用するMirakurunの情報
 epg_mirakurun_host: mirakurun
 epg_mirakurun_port: 40772
 # Mirakurunが動作しているDocker network
+# このネットワークは既に存在することが前提とされるため、
+# このロールでは作成されない。
 epg_mirakurun_network: mirakurun
 
 # 接続するDBの設定
-epg_mysql_host: mysql
-epg_mysql_port: 3306
-epg_mysql_user: epgstation
-epg_mysql_password: epgstation
-epg_mysql_database: epgstation
+# SQLiteを使用するかどうか
+epg_use_sqlite: no
+# MySQLを利用する場合、以下の設定を上書きする。
+epg_mysql_config:
+  host: mysql
+  port: 3306
+  user: epgstation
+  password: epgstation
+  database: epgstation
 
-# 録画ファイルの保存場所
-epg_recorded_path: "{{ epg_base_dir }}/recorded"
+# EPGStationのリポジトリに含まれるenc.jsをダウンロードし自動で配置する
+# epg_version 変数を利用するため、epg_versionをlatestなどにしていると利用できない
+epg_download_encjs: yes
 
-# 録画ファイルのファイル名フォーマット
-# https://github.com/l3tnun/EPGStation/blob/master/doc/conf-manual.md#%E9%8C%B2%E7%94%BB%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%81%AE%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%90%8D%E3%83%86%E3%83%B3%E3%83%97%E3%83%AC%E3%83%BC%E3%83%88
-epg_recorded_format: "%YEAR%-%MONTH%-%DAY%_%CHID%_%CHNAME%_%TITLE%"
+# 指定したepg_imageを元に、ffmpegのビルドを行う。
+# 2020/5/16現在、It3tnun/epgstation には ffmpeg が同梱されていないため
+epg_build_image_for_ffmpeg: yes
+# ↑で利用するffmpegのバージョン
+epg_ffmpeg_version: 4.2.4
 
-# 録画先の容量がいっぱいになったときの挙動
-# no - 何もしない
-# remove - 古い物から削除
-epg_storage_limit_action: "remove"
+# URL Schemeの設定
+# macOSやWindowsの設定は以下を参照し、必要であれば追加する
+# macOS: https://github.com/l3tnun/EPGStation/blob/master/doc/mac-url-scheme.md
+# Windows: https://github.com/l3tnun/EPGStation/blob/master/doc/windows-url-scheme.md
+epg_url_schemes:
+  m2ts:
+    ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS'
+    android: 'intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=PROTOCOL;end'
+  video:
+    ios: 'infuse://x-callback-url/play?url=PROTOCOL://ADDRESS'
+    android: 'intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=PROTOCOL;end'
+  download:
+    ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS'
 
-# 録画先の空き容量の閾値(MB)
-epg_storage_limit_threshold: "20480"
+# Logの設定
+# ログレベル。
+# https://github.com/l3tnun/EPGStation/blob/master/doc/log-manual.md#epgstation-%E3%81%AE%E3%83%AD%E3%82%B0%E5%87%BA%E5%8A%9B
+epg_log_level: info
+# ログファイル一つあたりの最大容量
+epg_max_log_size: 1048576
+# ローテートしたログファイルをいくつまで保持するか
+epg_log_backup_num: 3
 
-# HWエンコードに使用するデバイスへのパス
-epg_vaapi_device: /dev/dri/card0
+# 他のconfigを挿入したい場合、以下を記述する。 
+# これは文字列である必要がある。
+# epg_raw_configs: |
+#   encodeProcessNum: 4
 
-# EPGStationをリバースプロキシで公開し、サブディレクトリで運用する場合の設定
-epg_behind_proxy: no
-epg_published_directory: ""
+# configディレクトリ以下に追加で配置するファイルへのパス
+epg_additional_files: []
 
-# no - error
-# twoByte - 全て全角にする
-# oneByte - 英数字記号を半角にする
-# oneByteWithCH - チャンネル番号も含めて半角にする
-epg_convert_db_str: "oneByteWithCH"
+# エンコードに使われるプロセスの最大数
+epg_encode_process_num: "{{ ansible_processor_nproc }}"
+
+# リアルタイム視聴時のエンコードコマンド
+epg_live_stream_commands:
+  ts:
+    m2ts:
+      - name: 720p
+        cmd:
+          "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2
+          -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast -y -f mpegts pipe:1"
+      - name: 480p
+        cmd:
+          "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2
+          -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast -y -f mpegts pipe:1"
+      - name: 無変換
+    m2tsll:
+      - name: 720p
+        cmd:
+          "%FFMPEG% -dual_mono_mode main -f mpegts -analyzeduration 500000 -i pipe:0 -map 0 -c:s copy -c:d
+          copy -ignore_unknown -fflags nobuffer -flags low_delay -max_delay 250000 -max_interleave_delta 1
+          -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -flags +cgop -vf yadif,scale=-2:720
+          -b:v 3000k -preset veryfast -y -f mpegts pipe:1"
+      - name: 480p
+        cmd:
+          "%FFMPEG% -dual_mono_mode main -f mpegts -analyzeduration 500000 -i pipe:0 -map 0 -c:s copy -c:d
+          copy -ignore_unknown -fflags nobuffer -flags low_delay -max_delay 250000 -max_interleave_delta 1
+          -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2 -c:v libx264 -flags +cgop -vf yadif,scale=-2:480
+          -b:v 1500k -preset veryfast -y -f mpegts pipe:1"
+    webm:
+      - name: 720p
+        cmd:
+          "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 3 -c:a libvorbis -ar 48000 -b:a 192k -ac
+          2 -c:v libvpx-vp9 -vf yadif,scale=-2:720 -b:v 3000k -deadline realtime -speed 4 -cpu-used -8 -y -f
+          webm pipe:1"
+      - name: 480p
+        cmd:
+          "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 2 -c:a libvorbis -ar 48000 -b:a 128k -ac
+          2 -c:v libvpx-vp9 -vf yadif,scale=-2:480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -y -f
+          webm pipe:1"
+    mp4:
+      - name: 720p
+        cmd:
+          "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2
+          -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -profile:v baseline -preset veryfast -tune
+          fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4
+          pipe:1"
+      - name: 480p
+        cmd: >-
+          "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2
+          -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -profile:v baseline -preset veryfast -tune
+          fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4
+          pipe:1"
+    hls:
+      - name: 720p
+        cmd:
+          "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+          -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+          -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
+          aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
+          -flags +loop-global_header %OUTPUT%"
+      - name: 480p
+        cmd:
+          "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+          -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+          -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
+          aac -ar 48000 -b:a 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast
+          -flags +loop-global_header %OUTPUT%"
+
+epg_recorded_stream_commands:
+  ts:
+    webm:
+      - name: 720p
+        cmd:
+          "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 3 -c:a libvorbis -ar 48000 -b:a 192k -ac 2
+          -c:v libvpx-vp9 -vf yadif,scale=-2:720 -b:v 3000k -deadline realtime -speed 4 -cpu-used -8 -y -f
+          webm pipe:1"
+      - name: 480p
+        cmd:
+          "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 3 -c:a libvorbis -ar 48000 -b:a 128k -ac 2
+          -c:v libvpx-vp9 -vf yadif,scale=-2:480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -y -f
+          webm pipe:1"
+    mp4:
+      - name: 720p
+        cmd:
+          "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2 -c:v
+          libx264 -vf yadif,scale=-2:720 -b:v 3000k -profile:v baseline -preset veryfast -tune
+          fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4
+          pipe:1"
+      - name: 480p
+        cmd:
+          "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2 -c:v
+          libx264 -vf yadif,scale=-2:480 -b:v 1500k -profile:v baseline -preset veryfast -tune
+          fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4
+          pipe:1"
+    hls:
+      - name: 720p
+        cmd:
+          "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+          -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1
+          -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
+          aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
+          -flags +loop-global_header %OUTPUT%"
+      - name: 480p
+        cmd:
+          "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+          -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1
+          -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
+          aac -ar 48000 -b:a 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast
+          -flags +loop-global_header %OUTPUT%"
+
+epg_encoded_stream_commands:
+  webm:
+    - name: 720p
+      cmd: >-
+        "%FFMPEG% -dual_mono_mode main -ss %SS% -i %INPUT% -sn -threads 3 -c:a libvorbis -ar 48000 -b:a"
+        "192k -ac 2 -c:v libvpx-vp9 -vf scale=-2:720 -b:v 3000k -deadline realtime -speed 4 -cpu-used -8 -y"
+        "-f webm pipe:1"
+    - name: 480p
+      cmd: >-
+        "%FFMPEG% -dual_mono_mode main -ss %SS% -i %INPUT% -sn -threads 3 -c:a libvorbis -ar 48000 -b:a"
+        "128k -ac 2 -c:v libvpx-vp9 -vf scale=-2:480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -y"
+        "-f webm pipe:1"
+  mp4:
+    - name: 720p
+      cmd: >-
+        "%FFMPEG% -dual_mono_mode main -ss %SS% -i %INPUT% -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac"
+        "2 -c:v libx264 -vf scale=-2:720 -b:v 3000k -profile:v baseline -preset veryfast -tune"
+        "fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4"
+        "pipe:1"
+    - name: 480p
+      cmd: >-
+        "%FFMPEG% -dual_mono_mode main -ss %SS% -i %INPUT% -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac"
+        "2 -c:v libx264 -vf scale=-2:480 -b:v 1500k -profile:v baseline -preset veryfast -tune"
+        "fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4"
+        "pipe:1"
+  hls:
+    - name: 720p
+      cmd: >-
+        "%FFMPEG% -dual_mono_mode main -ss %SS% -i %INPUT% -sn -threads 0 -ignore_unknown"
+        "-max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1"
+        "-hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a"
+        "aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf scale=-2:720 -b:v 3000k -preset veryfast -flags"
+        "+loop-global_header %OUTPUT%"
+    - name: 480p
+      cmd: >-
+        "%FFMPEG% -dual_mono_mode main -ss %SS% -i %INPUT% -sn -threads 0 -ignore_unknown"
+        "-max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1"
+        "-hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a"
+        "aac -ar 48000 -b:a 128k -ac 2 -c:v libx264 -vf scale=-2:480 -b:v 3000k -preset veryfast -flags"
+        "+loop-global_header %OUTPUT%"
 

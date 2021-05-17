@@ -1,0 +1,26 @@
+{% extends 'logConfigBase.yml.j2' %}
+{% block service_name %}EPGUpdater{% endblock %}
+
+{% block categories %}
+categories:
+  default:
+    appenders:
+      - console
+      - stdout
+    level: {{ epg_log_level }}
+  system: 
+    appenders: 
+      - system
+      - stdout
+    level: {{ epg_log_level }}
+  access: 
+    appenders: 
+      - access
+      - stdout
+    level: {{ epg_log_level }}
+  stream: 
+    appenders: 
+      - stream
+      - stdout
+    level: {{ epg_log_level }}
+{% endblock %}
