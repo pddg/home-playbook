@@ -19,20 +19,8 @@
     - "{{ mirakurun_base_dir }}/db"
   become: yes
 
-- name: Mirakurun channel config exists
-  stat:
-    path: "{{ mirakurun_base_dir }}/conf/channels.yml"
-  register: mirakurun_channels_config
-
-- name: Copy initial Mirakurun channel config
-  copy:
-    src: "files/channel.yml"
-    dest: "{{ mirakurun_base_dir }}/conf/"
-    owner: "{{ mirakurun_user }}"
-    group: "{{ mirakurun_group }}"
-  when: not mirakurun_channels_config.stat.exists
-
 - name: Mirakurun server config exists
+  become: yes
   template:
     src: "templates/server.yml.j2"
     dest: "{{ mirakurun_base_dir }}/conf/server.yml"
@@ -40,10 +28,12 @@
     group: "{{ mirakurun_group }}"
 
 - name: Mirakurun network is created
+  become: yes
   docker_network:
     name: "{{ mirakurun_network }}"
 
 - name: Dockerfile of mirakurun exists
+  become: yes
   copy:
     src: "files/Dockerfile"
     dest: "{{ mirakurun_base_dir }}/"
@@ -51,19 +41,20 @@
     group: "{{ mirakurun_group }}"
 
 - name: Mirakurun docker image is pulled
+  become: yes
   docker_image:
     name: "{{ mirakurun_image }}"
     tag: "{{ mirakurun_version }}"
     source: pull
 
 - name: Mirakurun container is started
+  become: yes
   docker_container:
     name: "{{ mirakurun_container_name }}"
     image: "{{ mirakurun_image }}:{{ mirakurun_version }}"
     capabilities:
       - SYS_NICE
       - SYS_ADMIN
-      - SYS_RAWIO
     networks:
       - name: "{{ mirakurun_network }}"
     ports:
@@ -79,4 +70,5 @@
     env:
       TZ: "Asia/Tokyo"
     restart_policy: unless-stopped
+    container_default_behavior: compatibility
 

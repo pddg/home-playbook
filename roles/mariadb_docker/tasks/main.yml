@@ -30,4 +30,5 @@
       TZ: "Asia/Tokyo"
     networks_cli_compatible: no
     restart_policy: unless-stopped
+    container_default_behavior: compatibility
 
