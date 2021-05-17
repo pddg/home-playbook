@@ -1,4 +1,4 @@
-- hosts: record-servers
+- hosts: record_servers
   roles:
     - name: docker
       tags: docker
