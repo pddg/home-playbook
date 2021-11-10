@@ -18,7 +18,7 @@
       tags: mirakurun
       become: yes
       vars:
-        mirakurun_version: 3.5.0
+        mirakurun_version: 3.8.0
         mirakurun_port: 40772
 
     - name: mariadb_docker
@@ -37,7 +37,7 @@
     - name: epgstation
       tags: epgstation
       vars:
-        epg_version: v2.3.3
+        epg_version: v2.6.15
         epg_port: 8888
         epg_recorded_path: "/mnt/record"
         epg_mirakurun_host: mirakurun
@@ -54,7 +54,7 @@
       vars:
         mirakurun_container_name: "mirakurun"
         mirakurun_port: 40772
-        chinachu_version: "c3dd9a05bc97a414d8aac0e14c9ddcc1cc39d2cd"
+        chinachu_version: "198614c6be8021dbd6af2ce0c4c6b9935fb2e9b7"
         chinachu_enable_vaapi: yes
         chinachu_vaapi_device: "/dev/dri/card0"
         chinachu_networks:
