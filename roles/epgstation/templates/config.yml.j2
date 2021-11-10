@@ -30,12 +30,12 @@ thumbnail: "%ROOT%/thumbnail"
 encodeProcessNum: {{ epg_encode_process_num }}
 
 urlscheme:
-{{ epg_url_schemes | to_nice_yaml(indent=2) | indent(width=2,indentfirst=True) }}
+{{ epg_url_schemes | to_nice_yaml(indent=2) | indent(2,True) }}
 
 stream:
   live:
-{{ epg_live_stream_commands | to_nice_yaml(indent=2) | indent(width=4,indentfirst=True) }}
+{{ epg_live_stream_commands | to_nice_yaml(indent=2) | indent(4,True) }}
   recorded:
-{{ epg_recorded_stream_commands | to_nice_yaml(indent=2) | indent(width=4,indentfirst=True) }}
+{{ epg_recorded_stream_commands | to_nice_yaml(indent=2) | indent(4,True) }}
   encoded:
-{{ epg_encoded_stream_commands | to_nice_yaml(indent=2) | indent(width=4,indentfirst=True) }}
+{{ epg_encoded_stream_commands | to_nice_yaml(indent=2) | indent(4,True) }}

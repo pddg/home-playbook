@@ -35,11 +35,11 @@
   when: epg_download_encjs
   become: yes
   loop:
-    - "enc.js"
-    - "enc3.js"
+    - src: "enc.js.template"
+      dest: "enc.js"
   get_url:
-    url: "https://{{ epg_repository | regex_replace('^github.com', 'raw.githubusercontent.com') }}/{{ epg_version }}/config/{{ item }}"
-    dest: "{{ epg_base_dir }}/config/{{ item }}"
+    url: "https://{{ epg_repository | regex_replace('^github.com', 'raw.githubusercontent.com') }}/{{ epg_version }}/config/{{ item.src }}"
+    dest: "{{ epg_base_dir }}/config/{{ item.dest }}"
     owner: "{{ epg_user_uid }}"
     group: "{{ epg_user_gid }}"
     mode: 0744
