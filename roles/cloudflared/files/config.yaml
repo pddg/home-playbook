@@ -1,0 +1,10 @@
+tunnel: b2b6b594-0c92-4eb5-9c74-eed08f0e972d
+credentials-file: /home/pudding/.cloudflared/b2b6b594-0c92-4eb5-9c74-eed08f0e972d.json
+
+ingress:
+  - hostname: chinachu.pudding.dev
+    service: http://localhost:10772
+  - hostname: epgstation.pudding.dev
+    service: http://localhost:8888
+  - service: http_status:404
+

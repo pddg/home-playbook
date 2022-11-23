@@ -1,0 +1,75 @@
+---
+- name: Configuration directory must exist
+  file:
+    path: "{{ ansible_env.HOME }}/.cloudflared/"
+    state: directory
+    mode: 0700
+    owner: "{{ ansible_user_uid | string }}"
+    group: "{{ ansible_user_gid | string }}"
+
+- name: Configurations are up-to-date
+  register: cloudflared_config
+  copy:
+    src: "config.yaml"
+    dest: "{{ ansible_env.HOME }}/.cloudflared/config.yaml"
+    mode: 0664
+    owner: "{{ ansible_user_uid | string }}"
+    group: "{{ ansible_user_gid | string }}"
+
+- name: Keyrings dir exists
+  become: yes
+  file:
+    path: "{{ cloudflared_keyring_dir }}"
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: GPG key of cloudflare is added
+  become: yes
+  register: cloudflared_gpg_key
+  get_url:
+    url: https://pkg.cloudflare.com/cloudflare-main.gpg
+    dest: "{{ cloudflared_keyring_dir }}/cloudflare-main.gpg"
+    mode: 0644
+    owner: root
+    group: root
+
+- name: Cloudflare package repository is added
+  become: yes
+  register: cloudflared_list
+  template:
+    src: "cloudflared.list.jinja2"
+    dest: "/etc/apt/sources.list.d/cloudflared.list"
+    mode: 0644
+    owner: root
+    group: root
+
+- name: apt update if needed
+  become: yes
+  when: cloudflared_gpg_key.changed or cloudflared_list.changed
+  apt:
+    update_cache: yes
+
+- name: Cloudflared is installed
+  become: yes
+  register: cloudflared_installed
+  apt:
+    pkg:
+      - "cloudflared={{ cloudflared_version }}"
+    cache_valid_time: 3600
+
+- name: Configs are reloaded
+  become: yes
+  # cloudflaredのdebパッケージが適切にreloadすることを期待してそのときはrestartしない
+  when: not cloudflared_installed.changed and cloudflared_config.changed
+  systemd:
+    name: cloudflared
+    state: restarted
+
+- name: Cloudflared is started
+  become: yes
+  systemd:
+    name: cloudflared
+    state: started
+

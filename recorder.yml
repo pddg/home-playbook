@@ -62,3 +62,9 @@
         chinachu_recorded_path: "/mnt/record"
         chinachu_low_space_storage:
           threshold: 30000
+
+    - name: cloudflared
+      tags: cloudflared
+      vars:
+        cloudflared_version: 2022.11.0
+
