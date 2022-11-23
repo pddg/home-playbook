@@ -12,6 +12,7 @@ mysql:
   user: {{ epg_mysql_config.user | default("epgstation") }}
   password: {{ epg_mysql_config.password | default("epgstation") }}
   database: {{ epg_mysql_config.database | default("epgstation") }}
+  charset: utf8mb4
 {% endif %}
 
 uid: {{ epg_user_uid }}
@@ -20,6 +21,8 @@ gid: {{ epg_user_gid }}
 
 ffmpeg: /usr/local/bin/ffmpeg
 ffprobe: /usr/local/bin/ffprobe
+
+needToReplaceEnclosingCharacters: true
 
 recorded:
   - name: recorded

@@ -1,6 +1,6 @@
 ---
 # EPGStationのバージョン
-epg_version: v2.3.3
+epg_version: v2.6.20
 epg_image: l3tnun/epgstation
 epg_repository: github.com/l3tnun/epgstation
 
