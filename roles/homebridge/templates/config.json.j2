@@ -1,0 +1,21 @@
+{
+    "bridge": {
+        "name": "Homebridge 2680",
+        "username": "0E:E1:2E:94:26:80",
+        "port": 53487,
+        "pin": "031-45-154"
+    },
+    "accessories": [],
+    "platforms": [
+        {
+            "name": "Config",
+            "port": 8581,
+            "platform": "config"
+        },
+        {
+            "name": "Nature Remo Platform",
+            "accessToken": "{{ homebridge_nature_remo_token | string }}",
+            "platform": "NatureRemoPlatformPlugin"
+        }
+    ]
+}

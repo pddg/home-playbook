@@ -1,0 +1,12 @@
+---
+homebridge_image: oznu/homebridge
+homebridge_version: 2022-11-14
+
+homebridge_container_name: homebridge
+
+# ホスト上のHomebridge関連ファイルの置き場所
+homebridge_base_dir: "/opt/homebridge"
+
+# Homebridge containerの実行ユーザ
+homebridge_user: "{{ ansible_user_uid | string }}"
+homebridge_group: "{{ ansible_user_gid | string }}"

@@ -1,0 +1,39 @@
+---
+- name: Homebridge base directory exists
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ homebridge_user }}"
+    group: "{{ homebridge_group }}"
+  loop:
+    - "{{ homebridge_base_dir }}"
+
+- name: Home bridge config is up-to-date
+  become: yes
+  template:
+    src: config.json.j2
+    dest: "{{ homebridge_base_dir }}/config.json"
+    owner: "{{ homebridge_user }}"
+    group: "{{ homebridge_group }}"
+    mode: 0644
+
+- name: Homebridge container is started
+  become: yes
+  docker_container:
+    name: "{{ homebridge_container_name }}"
+    image: "{{ homebridge_image }}:{{ homebridge_version }}"
+    pull: yes
+    volumes:
+      - "{{ homebridge_base_dir }}:/homebridge"
+    env:
+      TZ: "Asia/Tokyo"
+      PGID: "{{ homebridge_group }}"
+      PUID: "{{ homebridge_user }}"
+      HOMEBRIDGE_CONFIG_UI: "1"
+      HOMEBRIDGE_CONFIG_UI_PORT: "8581"
+    network_mode: host
+    networks_cli_compatible: no
+    container_default_behavior: compatibility
+    restart_policy: unless-stopped
+
