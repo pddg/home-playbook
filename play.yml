@@ -6,10 +6,6 @@
     - name: nfs
       tags: nfs
 
-    - name: mackerelio.mackerel-agent
-      tags: mackerel
-      become: yes
-
     - name: pddg.chrony
       tags: chrony
       vars:
@@ -21,3 +17,6 @@
 
     - name: homebridge
       tags: homebridge
+    
+    - name: grafana-agent
+      tags: grafana-agent

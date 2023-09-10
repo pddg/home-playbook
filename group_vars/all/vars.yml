@@ -26,3 +26,8 @@ mackerel_check_plugins:
     max_check_attempts: 3
     notification_interval: "\"1h\""
 
+grafana_cloud_api_key: "{{ vault_grafana_cloud_api_key | string | trim }}"
+grafana_cloud_prometheus_url: "{{ vault_grafana_cloud_prometheus_url | string | trim }}"
+grafana_cloud_prometheus_user: "{{ vault_grafana_cloud_prometheus_user | string | trim }}"
+grafana_cloud_loki_url: "{{ vault_grafana_cloud_loki_url | string | trim }}"
+grafana_cloud_loki_user: "{{ vault_grafana_cloud_loki_user | string | trim }}"

@@ -1,0 +1,4 @@
+---
+- name: Grafana Agent is installed and configured
+  ansible.builtin.include_role:
+    name: grafana.grafana.grafana_agent
