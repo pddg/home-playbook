@@ -1,0 +1,6 @@
+---
+cadvisor_container_name: cadvisor
+cadvisor_image: gcr.io/cadvisor/cadvisor
+cadvisor_version: v0.47.2
+cadvisor_port: 8080
+

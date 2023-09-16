@@ -1,0 +1,31 @@
+---
+- name: cAdvisor container is started
+  become: yes
+  docker_container:
+    name: "{{ cadvisor_container_name }}"
+    image: "{{ cadvisor_image }}:{{ cadvisor_version }}"
+    command:
+      - "--store_container_labels=false"
+      - "--docker_only=true"
+      - "--logtostderr=true"
+      - "--port={{ cadvisor_port }}"
+      - "--enable_metrics=app,cpu,cpuLoad,disk,diskIO,memory,network,process"
+    detach: true
+    auto_remove: false
+    init: false
+    interactive: false
+    memory: "0"
+    paused: false
+    privileged: true
+    read_only: false
+    tty: false
+    ports:
+      - "{{ cadvisor_port }}:{{ cadvisor_port }}"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:rw"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+    networks_cli_compatible: no
+    restart_policy: unless-stopped
+

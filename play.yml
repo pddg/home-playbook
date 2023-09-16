@@ -17,6 +17,9 @@
 
     - name: homebridge
       tags: homebridge
+
+    - name: cadvisor
+      tags: cadvisor
     
     - name: grafana-agent
       tags: grafana-agent
