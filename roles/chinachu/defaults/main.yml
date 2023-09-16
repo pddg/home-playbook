@@ -25,7 +25,7 @@ chinachu_base_dir: "/opt/chinachu"
 chinachu_recorded_path: "{{ chinachu_base_dir }}/recorded"
 # 録画ファイル名フォーマット
 # https://github.com/Chinachu/Chinachu/wiki/Configuration-recordedFormat
-chinachu_recorded_format: "[<date:yymmdd-HHMM>][<type><channel>][<tuner>]<title>.m2ts"
+chinachu_recorded_format: "[<date:yymmdd-HHMM>]<title>.m2ts"
 
 # Chinachu containerの実行ユーザ
 chinachu_user: "{{ ansible_user_uid | string }}"
@@ -42,7 +42,7 @@ chinachu_vaapi_device: ""
 # ストレージ容量が少なくなってきたときの挙動
 chinachu_low_space_storage:
   # 空き容量の閾値（MB）
-  threshold: 3000
+  threshold: 100000
   # 閾値を下回ったときの挙動
   # yes - 古いものから順に削除
   # no - 何もしない
