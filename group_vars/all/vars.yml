@@ -1,33 +1,7 @@
-mackerel_agent_apikey: "{{ vault_mackerel_agent_apikey }}"
-mackerel_agent_roles:
-  - "record:app"
-mackerel_use_plugins: yes
-mackerel_agent_display_name: "{{ inventory_hostname }}"
-
-mackerel_agent_plugins:
-  docker: "mackerel-plugin-docker -host unix:///var/run/docker.sock -name-format name"
-  uptime: "mackerel-plugin-uptime"
-  sensors: "ruby /home/pudding/mackerel/mackerel-plugins/sensors/temperature-metrics.rb"
-
-mackerel_check_plugins:
-  epgstation:
-    command: "check-http -u http://oryza.local:8888"
-    check_interval: 5
-    max_check_attempts: 3
-    notification_interval: "\"1h\""
-  chinachu:
-    command: "check-http -u http://oryza.local:10772"
-    check_interval: 5
-    max_check_attempts: 3
-    notification_interval: "\"1h\""
-  mirakurun:
-    command: "check-tcp -H oryza.local -p 40772"
-    check_interval: 5
-    max_check_attempts: 3
-    notification_interval: "\"1h\""
-
+---
 grafana_cloud_api_key: "{{ vault_grafana_cloud_api_key | string | trim }}"
 grafana_cloud_prometheus_url: "{{ vault_grafana_cloud_prometheus_url | string | trim }}"
 grafana_cloud_prometheus_user: "{{ vault_grafana_cloud_prometheus_user | string | trim }}"
 grafana_cloud_loki_url: "{{ vault_grafana_cloud_loki_url | string | trim }}"
 grafana_cloud_loki_user: "{{ vault_grafana_cloud_loki_user | string | trim }}"
+

@@ -1,7 +1,0 @@
----
--
-  hosts: develop
-  remote_user: "{{ lookup('env', 'USER') }}"
-  sudo: yes
-  roles:
-    - mackerel-agent
