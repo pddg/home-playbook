@@ -2,3 +2,14 @@
 - name: Grafana Agent is installed and configured
   ansible.builtin.include_role:
     name: grafana.grafana.grafana_agent
+
+- name: Ensure that the grafana-agent is ready
+  uri:
+    url: http://localhost:12345/-/ready
+    method: GET
+    status_code: 200
+  register: check_grafana_agent_readiness
+  until: check_grafana_agent_readiness is not failed
+  retries: 5
+  delay: 1
+
