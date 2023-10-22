@@ -169,6 +169,12 @@ grafana_agent_integrations_config:
       - name: mirakurun
         address: localhost:40772
         module: tcp
+      - name: polaris_ipv4
+        address: https://polaris.pddg.workers.dev/
+        module: http_2xx
+      - name: polaris_ipv6
+        address: https://polaris.pddg.workers.dev/
+        module: http_2xx_ipv6
     blackbox_config:
       modules:
         http_2xx:
@@ -177,6 +183,12 @@ grafana_agent_integrations_config:
           http:
             method: GET
             preferred_ip_protocol: 'ip4'
+        http_2xx_ipv6:
+          prober: http
+          timeout: 1s
+          http:
+            method: GET
+            preferred_ip_protocol: 'ip6'
         tcp:
           timeout: 1s
           prober: tcp
