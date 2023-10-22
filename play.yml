@@ -20,7 +20,10 @@
 
     - name: cadvisor
       tags: cadvisor
-    
+
+    - name: speedtest
+      tags: speedtest
+
     - name: grafana-agent
       tags: grafana-agent
 

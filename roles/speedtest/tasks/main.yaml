@@ -1,0 +1,33 @@
+---
+- name: Docker network for speedtest-exporter exists
+  become: yes
+  docker_network:
+    name: "{{ speedtest_network }}"
+
+- name: speedtest-exporter docker image is pulled
+  become: yes
+  docker_image:
+    name: "{{ speedtest_image }}"
+    tag: "{{ speedtest_version }}"
+    source: pull
+
+- name: speedtest-exporter container is started
+  become: yes
+  docker_container:
+    name: "{{ speedtest_container_name }}"
+    image: "{{ speedtest_image }}:{{ speedtest_version }}"
+    detach: true
+    auto_remove: false
+    init: false
+    interactive: false
+    paused: false
+    privileged: true
+    read_only: false
+    tty: false
+    ports:
+      - "{{ speedtest_port | string }}:{{ speedtest_port | string }}"
+    env:
+      SPEEDTEST_PORT: "{{ speedtest_port | string }}"
+    networks_cli_compatible: no
+    user: "{{ speedtest_user_uid }}:{{ speedtest_user_gid }}"
+    restart_policy: unless-stopped

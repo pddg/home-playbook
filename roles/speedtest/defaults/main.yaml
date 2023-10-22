@@ -1,0 +1,9 @@
+---
+speedtest_image: ghcr.io/miguelndecarvalho/speedtest-exporter
+speedtest_version: v3.5.4
+speedtest_container_name: speedtest-exporter
+speedtest_network: speedtest
+speedtest_port: 9798
+
+speedtest_user_uid: "{{ ansible_user_uid | string }}"
+speedtest_user_gid: "{{ ansible_user_gid | string }}"

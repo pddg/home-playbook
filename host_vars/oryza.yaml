@@ -37,6 +37,25 @@ grafana_agent_metrics_config:
             password: '{{ grafana_cloud_api_key }}'
             username: '{{ grafana_cloud_prometheus_user }}'
           url: '{{ grafana_cloud_prometheus_url }}'
+    - name: speedtest
+      scrape_configs:
+        - job_name: speedtest
+          scrape_interval: 30m
+          scrape_timeout: 3m
+          static_configs:
+            - targets: ['localhost:9798']
+              labels:
+                instance: '${HOSTNAME:-default}'
+          metric_relabel_configs:
+          - action: keep
+            regex: speedtest_server_id|speedtest_jitter_latency_milliseconds|speedtest_ping_latency_milliseconds|speedtest_download_bits_per_second|speedtest_upload_bits_per_second|speedtest_up
+            source_labels:
+            - __name__
+      remote_write:
+        - basic_auth:
+            password: '{{ grafana_cloud_api_key }}'
+            username: '{{ grafana_cloud_prometheus_user }}'
+          url: '{{ grafana_cloud_prometheus_url }}'
 
   global:
     scrape_interval: 60s
