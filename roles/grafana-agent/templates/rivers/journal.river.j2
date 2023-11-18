@@ -1,0 +1,36 @@
+argument "write_to" {
+    comment = "Loki remote write url"
+}
+
+loki.relabel "journal" {
+    forward_to = []
+    rule {
+        source_labels = ["__journal__systemd_unit"]
+        target_label = "service"
+    }
+    rule {
+        source_labels = ["__journal_priority_keyword"]
+        target_label = "level"
+    }
+    rule {
+        source_labels = ["__journal__systemd_unit"]
+        regex = "^(session-\\d+\\.scope|user@\\d+\\.service)$"
+        action = "drop"
+    }
+    {%- if grafana_agent_journal_excluded_units | length > 0 %}
+    rule {
+        source_labels = ["__journal__systemd_unit"]
+        regex = "^({{ grafana_agent_journal_excluded_units | join('|') }})$"
+        action = "drop"
+    }
+    {%- endif %}
+}
+
+loki.source.journal "journallog" {
+    forward_to = [argument.write_to.value]
+    max_age = "10m"
+    relabel_rules = loki.relabel.journal.rules
+    labels = {
+        job = "systemd-journal",
+    }
+}

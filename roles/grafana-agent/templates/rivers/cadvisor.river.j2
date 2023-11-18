@@ -1,0 +1,30 @@
+argument "write_to" {
+    comment = "remote write target"
+}
+
+prometheus.relabel "cadvisor" {
+    forward_to = [argument.write_to.value]
+
+    rule {
+        source_labels = ["name"]
+        target_label = "service"
+    }
+    rule {
+        source_labels = ["id"]
+        regex = "/"
+        action = "drop"
+    }
+    rule {
+        source_labels = ["__name__"]
+        regex = "^({{ grafana_agent_cadvisor_enabled_metrics | join('|') }})$"
+        action = "keep"
+    }
+}
+
+prometheus.scrape "cadvisor" {
+    job_name = "cadvisor"
+    targets = [
+        {"__address__" = "localhost:8080"},
+    ]
+    forward_to = [prometheus.relabel.cadvisor.receiver]
+}

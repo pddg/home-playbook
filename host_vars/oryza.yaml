@@ -1,215 +1,36 @@
 ---
-grafana_agent_user_groups:
-  # For syslog and journal logs
-  - adm
-  - systemd-journal
-  # For container logs
-  - docker
+grafana_agent_user_groups: "{{ ['docker', 'syslog'] + grafana_agent_user_default_groups | unique }}"
 
-grafana_agent_metrics_config:
-  configs:
-    - name: integrations
-      remote_write:
-        - basic_auth:
-            password: '{{ grafana_cloud_api_key }}'
-            username: '{{ grafana_cloud_prometheus_user }}'
-          url: '{{ grafana_cloud_prometheus_url }}'
-    - name: cadvisor
-      scrape_configs:
-        - job_name: cadvisor
-          static_configs:
-            - targets: ['localhost:8080']
-              labels:
-                instance: '${HOSTNAME:-default}'
-          relabel_configs:
-            - source_labels: ['name']
-              target_label: 'service'
-            - source_labels: ['id']
-              regex: /
-              action: drop
-          metric_relabel_configs:
-          - action: keep
-            regex: container_cpu_usage_seconds_total|container_fs_inodes_free|container_fs_inodes_total|container_fs_limit_bytes|container_fs_usage_bytes|container_last_seen|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_tcp_usage_total|container_network_transmit_bytes_total|container_spec_memory_reservation_limit_bytes|machine_memory_bytes|machine_scrape_error
-            source_labels:
-            - __name__
-      remote_write:
-        - basic_auth:
-            password: '{{ grafana_cloud_api_key }}'
-            username: '{{ grafana_cloud_prometheus_user }}'
-          url: '{{ grafana_cloud_prometheus_url }}'
-    - name: speedtest
-      scrape_configs:
-        - job_name: speedtest
-          scrape_interval: 30m
-          scrape_timeout: 3m
-          static_configs:
-            - targets: ['localhost:9798']
-              labels:
-                instance: '${HOSTNAME:-default}'
-          metric_relabel_configs:
-          - action: keep
-            regex: speedtest_server_id|speedtest_jitter_latency_milliseconds|speedtest_ping_latency_milliseconds|speedtest_download_bits_per_second|speedtest_upload_bits_per_second|speedtest_up
-            source_labels:
-            - __name__
-      remote_write:
-        - basic_auth:
-            password: '{{ grafana_cloud_api_key }}'
-            username: '{{ grafana_cloud_prometheus_user }}'
-          url: '{{ grafana_cloud_prometheus_url }}'
+grafana_agent_prometheus_rivers:
+  - node_exporter.river
+  - cadvisor.river
+  - speedtest.river
+  - blackbox.river
 
-  global:
-    scrape_interval: 60s
-  wal_directory: /tmp/grafana-agent-wal
+grafana_agent_loki_rivers:
+  - journal.river
+  - docker.river
+  - filelog.river
 
-grafana_agent_logs_config:
-  configs:
-    - name: default
-      clients:
-        - basic_auth:
-            password: '{{ grafana_cloud_api_key }}'
-            username: '{{ grafana_cloud_loki_user }}'
-          url: '{{ grafana_cloud_loki_url }}'
-      positions:
-        filename: /tmp/positions.yaml
-      target_config:
-        sync_period: 10s
-      limits_config:
-        readline_rate_enabled: true
-        readline_rate: 1000
-        readline_burst: 1000
-        max_line_size: 100kb
-        max_line_size_truncate: true
-      scrape_configs:
-        - job_name: integrations/node_exporter_journal_scrape
-          journal:
-            max_age: 1h
-            labels:
-              job: systemd-journal
-              instance: '${HOSTNAME:-default}'
-          relabel_configs:
-            - source_labels: ['__journal__systemd_unit']
-              target_label: 'service'
-            - source_labels: ['__journal_priority_keyword']
-              target_label: 'level'
-            - source_labels: [__journal__systemd_unit]
-              regex: ^session-\d+.scope$
-              action: drop
-            - source_labels: [__journal__systemd_unit]
-              regex: ^user@\d+.service$
-              action: drop
-        - job_name: authlog
-          static_configs:
-          - targets:
-            - localhost
-            labels:
-              instance: '${HOSTNAME:-default}'
-              __path__: /var/log/auth.log
-              job: auth.log
-        - job_name: integrations/docker
-          docker_sd_configs:
-            - host: unix:///var/run/docker.sock
-              refresh_interval: 10s
-          relabel_configs:
-          - action: replace
-            replacement: integrations/docker
-            target_label: job
-          - action: replace
-            replacement: ${HOSTNAME:-default}
-            target_label: instance
-          - source_labels:
-              - __meta_docker_container_name
-            regex: '/(.*)'
-            target_label: service
-          - source_labels: 
-              - __meta_docker_container_log_stream
-            target_label: stream
+grafana_agent_log_file_patterns:
+  - pattern: /var/log/auth.log
+    job: authlog
+  - pattern: /var/log/router.log
+    job: rtx1210
 
-grafana_agent_integrations_config:
-  node_exporter:
-    enabled: true
-    instance: ${HOSTNAME:-default}
-    # disable unused collectors
-    disable_collectors:
-      - ipvs #high cardinality on kubelet
-      - btrfs
-      - infiniband
-      - xfs
-      - zfs
-      - nfs
-      # thermal_zone is not properly collected
-      - thermal_zone
-    # exclude dynamic interfaces
-    netclass_ignored_devices: "^(veth.*|cali.*|[a-f0-9]{15})$"
-    netdev_device_exclude: "^(veth.*|cali.*|[a-f0-9]{15})$"
-    # disable tmpfs
-    filesystem_fs_types_exclude: "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|tmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
-    # drop extensive scrape statistics
-    relabel_configs:
-    - replacement: ${HOSTNAME:-default}
-      target_label: instance
-    metric_relabel_configs:
-    - action: drop
-      regex: node_scrape_collector_.+
-      source_labels:
-      - __name__
-    - action: keep
-      regex: up|node_time_seconds|node_arp_entries|node_boot_time_seconds|node_cpu_seconds_total|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_disk_read_bytes_total|node_disk_read_time_seconds_total|node_disk_reads_completed_total|node_disk_write_time_seconds_total|node_disk_writes_completed_total|node_disk_written_bytes_total|node_filefd_allocated|node_filefd_maximum|node_filesystem_avail_bytes|node_filesystem_device_error|node_filesystem_files_free|node_filesystem_readonly|node_filesystem_size_bytes|node_load1|node_load15|node_load5|node_md_disks|node_md_disks_required|node_memory_Active_anon_bytes|node_memory_Active_bytes|node_memory_Active_file_bytes|node_memory_AnonHugePages_bytes|node_memory_AnonPages_bytes|node_memory_Bounce_bytes|node_memory_Buffers_bytes|node_memory_Cached_bytes|node_memory_CommitLimit_bytes|node_memory_Committed_AS_bytes|node_memory_Dirty_bytes|node_memory_Inactive_anon_bytes|node_memory_Inactive_bytes|node_memory_Inactive_file_bytes|node_memory_Mapped_bytes|node_memory_MemAvailable_bytes|node_memory_MemFree_bytes|node_memory_MemTotal_bytes|node_memory_SReclaimable_bytes|node_memory_SUnreclaim_bytes|node_memory_ShmemHugePages_bytes|node_memory_ShmemPmdMapped_bytes|node_memory_Shmem_bytes|node_memory_Slab_bytes|node_memory_SwapTotal_bytes|node_memory_VmallocChunk_bytes|node_memory_VmallocTotal_bytes|node_memory_VmallocUsed_bytes|node_memory_WritebackTmp_bytes|node_memory_Writeback_bytes|node_netstat_Icmp6_InErrors|node_netstat_Icmp6_InMsgs|node_netstat_Icmp6_OutMsgs|node_netstat_Icmp_InErrors|node_netstat_Icmp_InMsgs|node_netstat_Icmp_OutMsgs|node_netstat_IpExt_InOctets|node_netstat_IpExt_OutOctets|node_netstat_TcpExt_ListenDrops|node_netstat_TcpExt_ListenOverflows|node_netstat_TcpExt_TCPSynRetrans|node_netstat_Tcp_InErrs|node_netstat_Tcp_InSegs|node_netstat_Tcp_OutRsts|node_netstat_Tcp_OutSegs|node_netstat_Tcp_RetransSegs|node_netstat_Udp6_InDatagrams|node_netstat_Udp6_InErrors|node_netstat_Udp6_NoPorts|node_netstat_Udp6_OutDatagrams|node_netstat_Udp6_RcvbufErrors|node_netstat_Udp6_SndbufErrors|node_netstat_UdpLite_InErrors|node_netstat_Udp_InDatagrams|node_netstat_Udp_InErrors|node_netstat_Udp_NoPorts|node_netstat_Udp_OutDatagrams|node_netstat_Udp_RcvbufErrors|node_netstat_Udp_SndbufErrors|node_network_carrier|node_network_info|node_network_mtu_bytes|node_network_receive_bytes_total|node_network_receive_compressed_total|node_network_receive_drop_total|node_network_receive_errs_total|node_network_receive_fifo_total|node_network_receive_multicast_total|node_network_receive_packets_total|node_network_speed_bytes|node_network_transmit_bytes_total|node_network_transmit_compressed_total|node_network_transmit_drop_total|node_network_transmit_errs_total|node_network_transmit_fifo_total|node_network_transmit_multicast_total|node_network_transmit_packets_total|node_network_transmit_queue_length|node_network_up|node_nf_conntrack_entries|node_nf_conntrack_entries_limit|node_os_info|node_sockstat_FRAG6_inuse|node_sockstat_FRAG_inuse|node_sockstat_RAW6_inuse|node_sockstat_RAW_inuse|node_sockstat_TCP6_inuse|node_sockstat_TCP_alloc|node_sockstat_TCP_inuse|node_sockstat_TCP_mem|node_sockstat_TCP_mem_bytes|node_sockstat_TCP_orphan|node_sockstat_TCP_tw|node_sockstat_UDP6_inuse|node_sockstat_UDPLITE6_inuse|node_sockstat_UDPLITE_inuse|node_sockstat_UDP_inuse|node_sockstat_UDP_mem|node_sockstat_UDP_mem_bytes|node_sockstat_sockets_used|node_systemd_unit_state|node_textfile_scrape_error|node_uname_info|node_vmstat_oom_kill|node_vmstat_pgfault|node_vmstat_pgmajfault|node_vmstat_pgpgin|node_vmstat_pgpgout|node_vmstat_pswpin|node_vmstat_pswpout|process_max_fds|process_open_fds
-      source_labels:
-      - __name__
-  blackbox:
-    enabled: true
-    instance: ${HOSTNAME:-default}
-    blackbox_targets:
-      - name: chinachu
-        address: http://localhost:10772
-        module: http_2xx
-      - name: epgstation
-        address: http://localhost:8888
-        module: http_2xx
-      - name: mirakurun
-        address: localhost:40772
-        module: tcp
-      - name: polaris_ipv4
-        address: https://polaris.pddg.workers.dev/
-        module: http_2xx
-      - name: polaris_ipv6
-        address: https://polaris.pddg.workers.dev/
-        module: http_2xx_ipv6
-    blackbox_config:
-      modules:
-        http_2xx:
-          prober: http
-          timeout: 1s
-          http:
-            method: GET
-            preferred_ip_protocol: 'ip4'
-        http_2xx_ipv6:
-          prober: http
-          timeout: 1s
-          http:
-            method: GET
-            preferred_ip_protocol: 'ip6'
-        tcp:
-          timeout: 1s
-          prober: tcp
-          tcp:
-            preferred_ip_protocol: 'ip4'
-    relabel_configs:
-      - regex: agent_hostname
-        action: labeldrop
-      - source_labels: ['job']
-        regex: 'integrations/blackbox/(.*)'
-        target_label: 'job'
-    metric_relabel_configs:
-      - regex: probe_success|probe_http_status_code|probe_duration_seconds|probe_dns_lookup_time_seconds
-        source_labels: ['__name__']
-        action: keep
-  prometheus_remote_write:
-    - basic_auth:
-        password: '{{ grafana_cloud_api_key }}'
-        username: '{{ grafana_cloud_prometheus_user }}'
-      url: '{{ grafana_cloud_prometheus_url }}'
-
-grafana_agent_env_vars:
-  HOSTNAME: '%H'
-
+grafana_agent_blackbox_probe_targets:
+  - name: chinachu
+    address: http://localhost:10772
+    module: http_2xx
+  - name: epgstation
+    address: http://localhost:8888
+    module: http_2xx
+  - name: mirakurun
+    address: localhost:40772
+    module: tcp
+  - name: polaris_ipv4
+    address: https://polaris.pddg.workers.dev/
+    module: http_2xx
+  - name: polaris_ipv6
+    address: https://polaris.pddg.workers.dev/
+    module: http_2xx_ipv6

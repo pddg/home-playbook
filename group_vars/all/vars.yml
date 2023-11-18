@@ -5,3 +5,10 @@ grafana_cloud_prometheus_user: "{{ vault_grafana_cloud_prometheus_user | string 
 grafana_cloud_loki_url: "{{ vault_grafana_cloud_loki_url | string | trim }}"
 grafana_cloud_loki_user: "{{ vault_grafana_cloud_loki_user | string | trim }}"
 
+grafana_agent_api_key: "{{ grafana_cloud_api_key }}"
+grafana_agent_prometheus_remote:
+  url: "{{ grafana_cloud_prometheus_url }}"
+  user: "{{ grafana_cloud_prometheus_user }}"
+grafana_agent_loki_remote:
+  url: "{{ grafana_cloud_loki_url }}"
+  user: "{{ grafana_cloud_loki_user }}"

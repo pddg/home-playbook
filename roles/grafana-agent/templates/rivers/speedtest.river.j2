@@ -1,0 +1,23 @@
+argument "write_to" {
+    comment = "remote write target"
+}
+
+prometheus.relabel "speedtest" {
+    forward_to = [argument.write_to.value]
+
+    rule {
+        source_labels = ["__name__"]
+        regex = "^(speedtest_server_id|speedtest_jitter_latency_milliseconds|speedtest_ping_latency_milliseconds|speedtest_download_bits_per_second|speedtest_upload_bits_per_second|speedtest_up)$"
+        action = "keep"
+    }
+}
+
+prometheus.scrape "speedtest" {
+    targets = [
+        {"__address__" = "localhost:9798"},
+    ]
+    job_name = "speedtest"
+    forward_to = [prometheus.relabel.speedtest.receiver]
+    scrape_interval = "30m"
+    scrape_timeout = "3m"
+}

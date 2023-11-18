@@ -1,0 +1,34 @@
+argument "write_to" {
+    comment = "remote write target"
+}
+
+prometheus.relabel "probe" {
+    forward_to = [argument.write_to.value]
+
+    rule {
+        source_labels = ["__name__"]
+        regex = "^(probe_success|probe_http_status_code|probe_duration_seconds|probe_dns_lookup_time_seconds)$"
+        action = "keep"
+    }
+    rule {
+        source_labels = ["job"]
+        regex = "integrations/blackbox/(.*)"
+        target_label = "job"
+    }
+}
+
+prometheus.exporter.blackbox "probe" {
+    config = "{{ grafana_agent_blackbox_exporter_config | to_json | regex_replace('\"', '\\\"') }}"
+
+    {% for target in grafana_agent_blackbox_probe_targets %}
+    target "{{ target.name }}" {
+        address = "{{ target.address }}"
+        module = "{{ target.module }}"
+    }
+    {% endfor %}
+}
+
+prometheus.scrape "probe" {
+    targets = prometheus.exporter.blackbox.probe.targets
+    forward_to = [prometheus.relabel.probe.receiver]
+}

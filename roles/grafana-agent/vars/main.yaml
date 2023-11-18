@@ -1,0 +1,13 @@
+---
+_grafana_agent_base_url: "https://github.com/grafana/agent"
+
+_grafana_agent_cpu_arch_map:
+  i386: '386'
+  x86_64: amd64
+  aarch64: arm64
+  armv7l: armv7
+  armv6l: armv6
+
+_grafana_agent_cpu_arch: "{{ _grafana_agent_cpu_arch_map[ansible_architecture] | default(ansible_architecture) }}"
+
+_grafana_agent_deb: "grafana-agent-flow-{{ grafana_agent_version }}-1.{{ _grafana_agent_cpu_arch }}.deb"

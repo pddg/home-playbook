@@ -1,0 +1,85 @@
+logging {
+    level = "{{ grafana_agent_log_level }}"
+}
+
+local.file "api_key" {
+    filename = "{{ grafana_agent_config_root }}/api-key"
+    is_secret = true
+}
+
+prometheus.remote_write "grafanacloud" {
+    endpoint {
+        url = "{{ grafana_agent_prometheus_remote.url }}"
+        basic_auth {
+            username = "{{ grafana_agent_prometheus_remote.user }}"
+            password = local.file.api_key.content
+        }
+    }
+    wal {
+        truncate_frequency = "10m"
+        max_keepalive_time = "20m"
+    }
+}
+
+loki.write "grafanacloud" {
+    endpoint {
+        url = "{{ grafana_agent_loki_remote.url }}"
+        basic_auth {
+            username = "{{ grafana_agent_loki_remote.user }}"
+            password = local.file.api_key.content
+        }
+    }
+}
+
+prometheus.relabel "replace_instance" {
+    forward_to = [prometheus.remote_write.grafanacloud.receiver]
+    rule {
+        action = "replace"
+        target_label = "instance"
+        replacement = "{{ inventory_hostname }}"
+    }
+}
+
+
+loki.process "drop_abnormals" {
+    forward_to = [loki.write.grafanacloud.receiver]
+
+    // Logs whose size is larger than threshold should be dropped due to the limit of Grafana Cloud.
+    // https://grafana.com/docs/grafana-cloud/cost-management-and-billing/understand-your-invoice/usage-limits/#logs-usage-limits
+    stage.drop {
+        longer_than = "256KB"
+        drop_counter_reason = "too long"
+    }
+
+    stage.drop {
+        older_than = "24h"
+        drop_counter_reason = "too old"
+    }
+}
+
+loki.relabel "replace_instance" {
+    forward_to = [loki.process.drop_abnormals.receiver]
+    rule {
+        action = "replace"
+        target_label = "instance"
+        replacement = "{{ inventory_hostname }}"
+    }
+}
+
+{% for river in grafana_agent_loki_rivers %}
+module.file "{{ river | splitext | first }}" {
+    filename = "{{ grafana_agent_config_root }}/rivers/{{ river }}"
+    arguments {
+        write_to = loki.relabel.replace_instance.receiver
+    }
+}
+{% endfor %}
+
+{% for river in grafana_agent_prometheus_rivers %}
+module.file "{{ river | splitext | first }}" {
+    filename = "{{ grafana_agent_config_root }}/rivers/{{ river }}"
+    arguments {
+        write_to = prometheus.relabel.replace_instance.receiver
+    }
+}
+{% endfor %}

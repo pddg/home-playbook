@@ -1,0 +1,30 @@
+argument "write_to" {
+    comment = "Loki remote write url"
+}
+
+discovery.docker "linux" {
+    host = "unix:///var/run/docker.sock"
+}
+
+loki.relabel "docker" {
+    forward_to = []
+    rule {
+        source_labels = ["__meta_docker_container_name"]
+        regex = "/(.*)"
+        target_label = "service"
+    }
+    rule {
+        source_labels = ["__meta_docker_container_log_stream"]
+        target_label = "stream"
+    }
+}
+
+loki.source.docker "docker" {
+    host = "unix:///var/run/docker.sock"
+    targets = discovery.docker.linux.targets
+    forward_to = [argument.write_to.value]
+    relabel_rules = loki.relabel.docker.rules
+    labels = {
+        jobs = "integrations/docker",
+    }
+}

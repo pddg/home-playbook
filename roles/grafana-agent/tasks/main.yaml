@@ -1,7 +1,20 @@
 ---
-- name: Grafana Agent is installed and configured
-  ansible.builtin.include_role:
-    name: grafana.grafana.grafana_agent
+- name: Preflight
+  ansible.builtin.include_tasks:
+    file: before_exec.yaml
+
+- name: Install
+  ansible.builtin.include_tasks:
+    file: install.yaml
+    apply:
+      tags:
+        - grafana-agent-install
+  tags:
+    - grafana-agent-install
+
+- name: Configure
+  ansible.builtin.include_tasks:
+    file: configure.yaml
 
 - name: Ensure that the grafana-agent is ready
   uri:
@@ -10,6 +23,5 @@
     status_code: 200
   register: check_grafana_agent_readiness
   until: check_grafana_agent_readiness is not failed
-  retries: 5
+  retries: 3
   delay: 1
-

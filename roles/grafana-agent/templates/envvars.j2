@@ -1,0 +1,8 @@
+# The configuration file holding the agent config.
+CONFIG_FILE="{{ grafana_agent_config_root }}/grafana-agent-flow.river"
+
+# User-defined arguments to pass to the run command.
+CUSTOM_ARGS="{{ grafana_agent_additional_args }}"
+
+# Restart on system upgrade. Defaults to true.
+RESTART_ON_UPGRADE=true

@@ -1,0 +1,28 @@
+---
+- name: Download grafana-agent-flow
+  delegate_to: localhost
+  run_once: true
+  become: false
+  register: _grafana_agent_download
+  until: _grafana_agent_download is succeeded
+  retries: 3
+  delay: 1
+  check_mode: no
+  get_url:
+    url: "{{ _grafana_agent_base_url }}/releases/download/v{{ grafana_agent_version }}/{{ _grafana_agent_deb }}"
+    dest: "/tmp/{{ _grafana_agent_deb }}"
+    mode: 0664
+    checksum: "sha256:{{ grafana_agent_deb_checksums[_grafana_agent_cpu_arch] }}"
+
+- name: deb of grafana-agent-flow is propagated
+  become: false
+  check_mode: no
+  copy:
+    src: "/tmp/{{ _grafana_agent_deb }}"
+    dest: "/tmp/{{ _grafana_agent_deb }}"
+    remote_src: false
+
+- name: grafana-agent-flow is installed
+  become: true
+  apt:
+    deb: "/tmp/{{ _grafana_agent_deb }}"

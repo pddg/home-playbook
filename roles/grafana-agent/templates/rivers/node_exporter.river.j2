@@ -1,0 +1,26 @@
+argument "write_to" {
+    comment = "remote write target"
+}
+
+prometheus.exporter.unix "default" {
+    set_collectors = [
+        {%- for collector in grafana_agent_node_exporter_enabled_collectors -%}"{{ collector }}", {% endfor %}
+    ]
+    include_exporter_metrics = false
+
+    filesystem {
+        fs_types_exclude =  "^({{ grafana_agent_node_exporter_excluded_filesystems | join('|') }})$"
+    }
+    netclass {
+        ignored_devices = "^({{ grafana_agent_node_exporter_excluded_netclasses | join('|') }})$"
+    }
+    netdev {
+        device_exclude = "^({{ grafana_agent_node_exporter_excluded_netdevs | join('|') }})$"
+    }
+}
+
+prometheus.scrape "unix" {
+    job_name = "integrations/unix"
+    targets = prometheus.exporter.unix.default.targets
+    forward_to = [argument.write_to.value]
+}

@@ -1,0 +1,40 @@
+---
+- name: Ensure that the API Key is specified
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.assert:
+    that:
+      - grafana_agent_api_key != ""
+    fail_msg: "'grafana_agent_api_key' is required."
+    quiet: true
+
+- name: Ensure that the remote endpoint for prometheus is provided
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.assert:
+    that:
+      - grafana_agent_prometheus_remote.url != ""
+      - grafana_agent_prometheus_remote.user != ""
+    fail_msg: "'grafana_agent_prometheus_remote' is required."
+
+- name: Ensure that the remote endpoint for loki is provided
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.assert:
+    that:
+      - grafana_agent_loki_remote.url != ""
+      - grafana_agent_loki_remote.user != ""
+    fail_msg: "'grafana_agent_loki_remote' is required."
+
+- name: Ensure that the checksum of deb is specified
+  ansible.builtin.assert:
+    that:
+      - _grafana_agent_cpu_arch in grafana_agent_deb_checksums
+    fail_msg: "Checksum for {{ _grafana_agent_cpu_arch }} does not exist"
+
+- name: Ensure that the group exists ({{ grafana_agent_user_groups }})
+  loop: "{{ grafana_agent_user_groups }}"
+  ansible.builtin.getent:
+    database: group
+    key: "{{ item }}"
+    fail_key: "{{ item != 'grafana-agent' }}"

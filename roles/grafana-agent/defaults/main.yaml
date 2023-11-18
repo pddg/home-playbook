@@ -1,0 +1,203 @@
+---
+# Required: API key to push metrics, logs and traces ...etc.
+grafana_agent_api_key: ""
+
+# Required: Remote endpoint information for Prometheus.
+# API key should specified by `grafana_agent_api_key`.
+grafana_agent_prometheus_remote:
+  url: ""
+  user: ""
+
+# Required: Remote endpoint information for Loki.
+# API key should specified by `grafana_agent_api_key`.
+grafana_agent_loki_remote:
+  url: ""
+  user: ""
+
+# Default root directory to place configs for grafana agent.
+# This should not include trailing slash.
+grafana_agent_config_root: "/etc/grafana-agent"
+
+# Version of the agent to be installed.
+# This should not include `v` prefix.
+grafana_agent_version: 0.37.4
+
+# Checksum of deb file of grafana-agent
+# This is a map between cpu arch and corresponding checksum.
+grafana_agent_deb_checksums:
+  amd64: f4a583066491038fc75988a9699390584cfcfe63882399d8fb2a47c875f73de7
+  arm64: 2f9bed2cfb8ca7cab902c8b65314baf6b094d6862dcd1ba1ed54b0cef7a0b255
+
+# Default logging level for agent.
+# Following levels are allowed.
+# - debug
+# - info
+# - warn
+# `warn` is specified by default.
+grafana_agent_log_level: warn
+
+# Custom arguments for grafana agent
+grafana_agent_additional_args: ""
+
+# Default groups for the grafana-agent-flow user.
+grafana_agent_user_default_groups:
+  - systemd-journal
+  - grafana-agent
+  - adm
+
+# Groups that the grafana-agent-flow user should be belonged to.
+grafana_agent_user_groups: "{{ grafana_agent_user_default_groups }}"
+
+# Default rivers about metrics to be included. 
+# These files should be placed in /etc/grafana-agent/rivers
+grafana_agent_prometheus_default_rivers:
+  - node_exporter.river
+
+# Configuration files for Grafana Agent about Prometheus.
+# These files should be placed in /etc/grafana-agent/rivers
+# Specified rivers are loaded and pass receiver to write to.
+# Example:
+# grafana_agent_prometheus_rivers:
+#   - node-exporter.river
+#
+# Generated configuration will become as follows.
+# module.file "node-exporter" {
+#   filename = "/etc/grafana-agent/rivers/node-exporter.river"
+#   arguments {
+#     write_to = prometheus.remote_write.grafanacloud.receiver
+#   }
+# }
+grafana_agent_prometheus_rivers: "{{ grafana_agent_prometheus_default_rivers }}"
+
+# Default rivers about metrics to be included. 
+# These files should be placed in /etc/grafana-agent/rivers
+grafana_agent_loki_default_rivers:
+  - journal.river
+
+# Rivers about logs to be included.
+# These files should be placed in /etc/grafana-agent/rivers
+# Specified rivers are loaded and pass receiver to write to.
+# Example:
+# grafana_agent_loki_rivers:
+#   - journal.river
+#
+# Generated configuration will become as follows.
+# module.file "journal" {
+#   filename = "/etc/grafana-agent/rivers/journal.river"
+#   arguments {
+#     write_to = loki.write.grafanacloud.receiver
+#   }
+# }
+grafana_agent_loki_rivers: "{{ grafana_agent_loki_default_rivers }}"
+
+# ===== Configs for Node Exporter ===
+# Default configs for node-exporter.
+grafana_agent_node_exporter_default:
+  enabled_collectors:
+    - cpu
+    - boottime
+    - hwmon
+    - diskstats
+    - filefd
+    - filesystem
+    - loadavg
+    - meminfo
+    - netclass
+    - vmstat
+    - sockstat
+  excluded_filesystems:
+    - autofs
+    - binfmt_misc
+    - bpf
+    - cgroup2?
+    - configfs
+    - debugfs
+    - devpts
+    - devtmpfs
+    - tmpfs
+    - fusectl
+    - hugetlbfs
+    - iso9660
+    - mqueue
+    - nsfs
+    - overlay
+    - proc
+    - procfs
+    - pstore
+    - rpc_pipefs
+    - securityfs
+    - selinuxfs
+    - squashfs
+    - sysfs
+    - tracefs
+  excluded_netclasses:
+    - "veth.*"
+    - "cali.*"
+    - "[a-f0-9]{15}"
+  excluded_netdevs:
+    - "veth.*"
+    - "cali.*"
+    - "[a-f0-9]{15}"
+
+# Collectors that should be enabled in the host.
+grafana_agent_node_exporter_enabled_collectors: "{{ grafana_agent_node_exporter_default.enabled_collectors }}"
+
+# Filesystem types that shoud be excluded from node-exporter.
+grafana_agent_node_exporter_excluded_filesystems: "{{ grafana_agent_node_exporter_default.excluded_filesystems }}"
+
+# netclass that should be excluded from node-exporter
+grafana_agent_node_exporter_excluded_netclasses: "{{ grafana_agent_node_exporter_default.excluded_netclasses }}"
+
+# netdev that should be excluded from node-exporter
+grafana_agent_node_exporter_excluded_netdevs: "{{ grafana_agent_node_exporter_default.excluded_netdevs }}"
+
+# === Configs for cAdvisor ===
+grafana_agent_cadvisor_default:
+  enabled_metrics:
+    - container_cpu_usage_seconds_total
+    - container_fs_inodes_free
+    - container_fs_inodes_total
+    - container_fs_limit_bytes
+    - container_fs_usage_bytes
+    - container_last_seen
+    - container_memory_working_set_bytes
+    - container_network_receive_bytes_total
+    - container_network_tcp_usage_total
+    - container_network_transmit_bytes_total
+    - container_spec_memory_reservation_limit_bytes
+    - machine_memory_bytes
+
+grafana_agent_cadvisor_enabled_metrics: "{{ grafana_agent_cadvisor_default.enabled_metrics }}"
+
+# === Configs for journal logs ===
+grafana_agent_journal_excluded_units: []
+
+# === Configs for journal logs ===
+grafana_agent_blackbox_probe_targets: []
+
+grafana_agent_blackbox_exporter_config:
+  modules:
+    http_2xx:
+      prober: http
+      timeout: 1s
+      http:
+        method: GET
+        preferred_ip_protocol: 'ip4'
+    http_2xx_ipv6:
+      prober: http
+      timeout: 1s
+      http:
+        method: GET
+        preferred_ip_protocol: 'ip6'
+    tcp:
+      timeout: 1s
+      prober: tcp
+      tcp:
+        preferred_ip_protocol: 'ip4'
+
+# === Configs for file logs ===
+# Example:
+# grafana_agent_log_file_patterns:
+#   - pattern: /var/log/*.log
+#     job: varlog
+grafana_agent_log_file_patterns: []

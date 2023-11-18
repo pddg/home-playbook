@@ -1,0 +1,79 @@
+---
+- name: Grafana Agent user exists and configured
+  become: true
+  user:
+    name: grafana-agent-flow
+    state: present
+    system: true
+    create_home: false
+    groups: "{{ grafana_agent_user_groups }}"
+
+- name: Required dirs exists
+  become: true
+  loop:
+    - path: "{{ grafana_agent_config_root }}"
+      owner: root
+      group: grafana-agent
+    - path: "{{ grafana_agent_config_root }}/rivers"
+      owner: root
+      group: grafana-agent
+    - path: "/etc/systemd/system/grafana-agent-flow.service.d"
+      owner: root
+      group: root
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: 0755
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+
+- name: API key file is placed
+  become: true
+  copy:
+    dest: "{{ grafana_agent_config_root }}/api-key"
+    content: "{{ grafana_agent_api_key }}"
+    mode: 0600
+    owner: grafana-agent-flow
+    group: grafana-agent
+
+- name: Configs are up-to-date
+  become: true
+  register: _grafana_agent_configs
+  loop:
+    - "envvars"
+    - "grafana-agent-flow.river"
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ grafana_agent_config_root }}/{{ item }}"
+    mode: 0644
+    owner: root
+    group: grafana-agent
+
+- name: Rivers are up-to-date
+  become: true
+  register: _grafana_agent_rivers
+  loop: "{{ grafana_agent_loki_rivers + grafana_agent_prometheus_rivers }}"
+  template:
+    src: "rivers/{{ item }}.j2"
+    dest: "{{ grafana_agent_config_root }}/rivers/{{ item }}"
+    mode: 0644
+    owner: root
+    group: grafana-agent
+
+- name: Systemd drop-in is up-to-date
+  become: true
+  register: _grafana_agent_systemd_dropin
+  template:
+    src: "override.conf.j2"
+    dest: "/etc/systemd/system/grafana-agent-flow.service.d/override.conf"
+    mode: 0644
+    owner: root
+    group: root
+
+- name: Restart grafana-agent if need
+  become: true
+  when: _grafana_agent_configs.changed or _grafana_agent_rivers.changed or _grafana_agent_systemd_dropin.changed
+  systemd:
+    name: grafana-agent-flow
+    daemon_reload: "{{ _grafana_agent_systemd_dropin.changed }}"
+    state: restarted

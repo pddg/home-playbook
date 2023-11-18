@@ -1,0 +1,17 @@
+argument "write_to" {
+    comment = "Loki remote write url"
+}
+
+local.file_match "logfile" {
+    path_targets = [
+    {% for pattern in grafana_agent_log_file_patterns %}
+        {"__path__" = "{{ pattern.pattern }}", "job" = "{{ pattern.job }}"},
+    {% endfor %}
+    ]
+}
+
+loki.source.file "logs" {
+    targets = local.file_match.logfile.targets
+    forward_to = [argument.write_to.value]
+    tail_from_end = true
+}
