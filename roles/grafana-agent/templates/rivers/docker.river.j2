@@ -6,17 +6,6 @@ discovery.docker "linux" {
     host = "unix:///var/run/docker.sock"
 }
 
-// Workaround for https://github.com/grafana/agent/issues/4403
-discovery.relabel "filter_dups" {
-    targets = discovery.docker.linux.targets
-    rule {
-        source_labels = ["__meta_docker_network_id", "__meta_docker_port_private"]
-        regex = "(c8c287b5904c4e28da565b087aefc7df773105688d040294494b6bf92969f65f|e85692c4bc777047c04658e0acde3ff41a5ce38cd3018beae5c31cc69df7b0a8);(8888|10772|40772|3306|8080|8581|9798|)"
-        separator = ";"
-        action = "keep"
-    }
-}
-
 loki.relabel "docker" {
     forward_to = []
     rule {
@@ -32,7 +21,7 @@ loki.relabel "docker" {
 
 loki.source.docker "docker" {
     host = "unix:///var/run/docker.sock"
-    targets = discovery.relabel.filter_dups.output
+    targets = discovery.docker.linux.targets
     forward_to = [argument.write_to.value]
     relabel_rules = loki.relabel.docker.rules
     labels = {

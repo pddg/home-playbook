@@ -21,7 +21,8 @@ prometheus.exporter.blackbox "probe" {
     config = "{{ grafana_agent_blackbox_exporter_config | to_json | regex_replace('\"', '\\\"') }}"
 
     {% for target in grafana_agent_blackbox_probe_targets %}
-    target "{{ target.name }}" {
+    target {
+        name = "{{ target.name }}"
         address = "{{ target.address }}"
         module = "{{ target.module }}"
     }

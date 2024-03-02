@@ -52,7 +52,7 @@ loki.process "drop_abnormals" {
     }
 
     stage.drop {
-        older_than = "24h"
+        older_than = "1h"
         drop_counter_reason = "too old"
     }
 }
