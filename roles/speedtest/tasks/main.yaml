@@ -28,6 +28,5 @@
       - "{{ speedtest_port | string }}:{{ speedtest_port | string }}"
     env:
       SPEEDTEST_PORT: "{{ speedtest_port | string }}"
-    networks_cli_compatible: no
     user: "{{ speedtest_user_uid }}:{{ speedtest_user_gid }}"
     restart_policy: unless-stopped

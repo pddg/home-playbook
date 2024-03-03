@@ -28,7 +28,6 @@
       MYSQL_ROOT_PASSWORD: "{{ mariadb_root_password }}"
       MYSQL_DATABASE: "{{ mariadb_database }}"
       TZ: "Asia/Tokyo"
-    networks_cli_compatible: no
     restart_policy: unless-stopped
     container_default_behavior: compatibility
 

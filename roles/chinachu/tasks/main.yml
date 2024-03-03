@@ -79,7 +79,6 @@
       - "{{ chinachu_recorded_path }}:/usr/local/chinachu/recorded"
     devices: "{{ chinachu_enable_vaapi | bool | ternary([chinachu_vaapi_device + ':' + chinachu_vaapi_device], []) }}"
     groups: "{{ chinachu_enable_vaapi | bool | ternary(['video'], []) }}"
-    networks_cli_compatible: no
     env:
       TZ: "Asia/Tokyo"
     restart_policy: unless-stopped

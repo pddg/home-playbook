@@ -1,7 +1,7 @@
 ---
 mirakurun_image: chinachu/mirakurun
 mirakurun_version: 3.3.1
-mirakutun_container_name: mirakurun
+mirakurun_container_name: mirakurun
 mirakurun_port: 40772
 mirakurun_log_level: 2
 mirakurun_base_dir: "/opt/mirakurun"

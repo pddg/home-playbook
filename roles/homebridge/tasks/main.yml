@@ -33,7 +33,6 @@
       HOMEBRIDGE_CONFIG_UI: "1"
       HOMEBRIDGE_CONFIG_UI_PORT: "8581"
     network_mode: host
-    networks_cli_compatible: no
     container_default_behavior: compatibility
     restart_policy: unless-stopped
 

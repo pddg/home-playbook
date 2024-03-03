@@ -26,6 +26,5 @@
       - "/var/run:/var/run:rw"
       - "/sys:/sys:ro"
       - "/var/lib/docker/:/var/lib/docker:ro"
-    networks_cli_compatible: no
     restart_policy: unless-stopped
 

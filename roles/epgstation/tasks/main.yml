@@ -109,7 +109,6 @@
       - "{{ epg_base_dir }}/thumbnail:/app/thumbnail"
       - "{{ epg_base_dir }}/logs:/app/logs"
       - "{{ epg_recorded_path }}:/app/recorded"
-    networks_cli_compatible: no
     env:
       TZ: "Asia/Tokyo"
     restart_policy: unless-stopped
