@@ -18,7 +18,7 @@
       tags: mirakurun
       become: yes
       vars:
-        mirakurun_version: 3.9.0-rc.2
+        mirakurun_version: 3.9.0-rc.4
         mirakurun_port: 40772
 
     - name: mariadb_docker
@@ -37,17 +37,17 @@
     - name: epgstation
       tags: epgstation
       vars:
-        epg_version: v2.6.20
+        epg_version: v2.7.3
         epg_port: 8888
         epg_recorded_path: "/mnt/record"
         epg_mirakurun_host: mirakurun
         epg_mirakurun_network: mirakurun
         epg_mirakurun_port: 40772
         epg_mysql_config:
-          host: "{{ mariadb_container_name }}"
-          user: "{{ mariadb_user }}"
-          password: "{{ mariadb_password }}"
-          database: "{{ mariadb_database }}"
+          host: "epg-db"
+          user: "epgstation"
+          password: "epgstation"
+          database: "epgstation"
 
     - name: chinachu
       tags: chinachu
