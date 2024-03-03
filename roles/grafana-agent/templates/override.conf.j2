@@ -1,4 +1,5 @@
 [Service]
 Environment=HOSTNAME={{ inventory_hostname }}
+Environment=CUSTOM_ARGS=--disable-reporting
 EnvironmentFile=
 EnvironmentFile={{ grafana_agent_config_root }}/envvars
