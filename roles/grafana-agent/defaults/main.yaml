@@ -20,13 +20,13 @@ grafana_agent_config_root: "/etc/grafana-agent"
 
 # Version of the agent to be installed.
 # This should not include `v` prefix.
-grafana_agent_version: 0.40.1
+grafana_agent_version: 0.43.4
 
 # Checksum of deb file of grafana-agent
 # This is a map between cpu arch and corresponding checksum.
 grafana_agent_deb_checksums:
-  amd64: 38fd495c571778e8b02cd94c95f846833fe6c1b738baa3c0c6b6b1ab726ef443
-  arm64: 24280e7b50e7440a2cd28b9e5b135417de586fc81b95eeab88df4f689146c0fe
+  amd64: 18946aa55af11ec2cbdd79a406158dbffb98d2062d7af5128f473e189ad99d45
+  arm64: 92e4c0e5e87700130e3556859a660ce3f0176252c77a0f1bd668ad425e15405a
 
 # Default logging level for agent.
 # Following levels are allowed.
