@@ -67,19 +67,19 @@ loki.relabel "replace_instance" {
 }
 
 {% for river in grafana_agent_loki_rivers %}
-module.file "{{ river | splitext | first }}" {
+import.file "{{ river | splitext | first }}" {
     filename = "{{ grafana_agent_config_root }}/rivers/{{ river }}"
-    arguments {
-        write_to = loki.relabel.replace_instance.receiver
-    }
+}
+{{ river | splitext | first }}.collect "default" {
+    write_to = loki.relabel.replace_instance.receiver
 }
 {% endfor %}
 
 {% for river in grafana_agent_prometheus_rivers %}
-module.file "{{ river | splitext | first }}" {
+import.file "{{ river | splitext | first }}" {
     filename = "{{ grafana_agent_config_root }}/rivers/{{ river }}"
-    arguments {
-        write_to = prometheus.relabel.replace_instance.receiver
-    }
+}
+{{ river | splitext | first }}.scrape "default" {
+    write_to = prometheus.relabel.replace_instance.receiver
 }
 {% endfor %}

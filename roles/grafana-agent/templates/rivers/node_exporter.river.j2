@@ -1,3 +1,5 @@
+declare "scrape" {
+
 argument "write_to" {
     comment = "remote write target"
 }
@@ -23,4 +25,6 @@ prometheus.scrape "unix" {
     job_name = "integrations/unix"
     targets = prometheus.exporter.unix.default.targets
     forward_to = [argument.write_to.value]
+}
+
 }

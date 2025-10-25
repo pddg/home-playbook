@@ -25,16 +25,3 @@
       - grafana_agent_loki_remote.url != ""
       - grafana_agent_loki_remote.user != ""
     fail_msg: "'grafana_agent_loki_remote' is required."
-
-- name: Ensure that the checksum of deb is specified
-  ansible.builtin.assert:
-    that:
-      - _grafana_agent_cpu_arch in grafana_agent_deb_checksums
-    fail_msg: "Checksum for {{ _grafana_agent_cpu_arch }} does not exist"
-
-- name: Ensure that the group exists ({{ grafana_agent_user_groups }})
-  loop: "{{ grafana_agent_user_groups }}"
-  ansible.builtin.getent:
-    database: group
-    key: "{{ item }}"
-    fail_key: "{{ item != 'grafana-agent' }}"

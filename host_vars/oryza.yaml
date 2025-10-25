@@ -4,8 +4,6 @@ grafana_agent_user_groups: "{{ ['docker', 'syslog'] + grafana_agent_user_default
 grafana_agent_prometheus_rivers:
   - node_exporter.river
   - cadvisor.river
-  - speedtest.river
-  - blackbox.river
 
 grafana_agent_loki_rivers:
   - journal.river
@@ -17,20 +15,3 @@ grafana_agent_log_file_patterns:
     job: authlog
   - pattern: /var/log/router.log
     job: rtx1210
-
-grafana_agent_blackbox_probe_targets:
-  - name: chinachu
-    address: http://localhost:10772
-    module: http_2xx
-  - name: epgstation
-    address: http://localhost:8888
-    module: http_2xx
-  - name: mirakurun
-    address: localhost:40772
-    module: tcp
-  - name: polaris_ipv4
-    address: https://polaris.pddg.workers.dev/
-    module: http_2xx
-  - name: polaris_ipv6
-    address: https://polaris.pddg.workers.dev/
-    module: http_2xx_ipv6

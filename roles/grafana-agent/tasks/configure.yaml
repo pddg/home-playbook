@@ -2,7 +2,7 @@
 - name: Grafana Agent user exists and configured
   become: true
   user:
-    name: grafana-agent-flow
+    name: alloy
     state: present
     system: true
     create_home: false
@@ -13,11 +13,11 @@
   loop:
     - path: "{{ grafana_agent_config_root }}"
       owner: root
-      group: grafana-agent
+      group: alloy
     - path: "{{ grafana_agent_config_root }}/rivers"
       owner: root
-      group: grafana-agent
-    - path: "/etc/systemd/system/grafana-agent-flow.service.d"
+      group: alloy
+    - path: "/etc/systemd/system/alloy.service.d"
       owner: root
       group: root
   file:
@@ -33,21 +33,21 @@
     dest: "{{ grafana_agent_config_root }}/api-key"
     content: "{{ grafana_agent_api_key }}"
     mode: 0600
-    owner: grafana-agent-flow
-    group: grafana-agent
+    owner: alloy
+    group: alloy
 
 - name: Configs are up-to-date
   become: true
   register: _grafana_agent_configs
   loop:
     - "envvars"
-    - "grafana-agent-flow.river"
+    - "config.alloy"
   template:
     src: "{{ item }}.j2"
     dest: "{{ grafana_agent_config_root }}/{{ item }}"
     mode: 0644
     owner: root
-    group: grafana-agent
+    group: alloy
 
 - name: Rivers are up-to-date
   become: true
@@ -65,15 +65,15 @@
   register: _grafana_agent_systemd_dropin
   template:
     src: "override.conf.j2"
-    dest: "/etc/systemd/system/grafana-agent-flow.service.d/override.conf"
+    dest: "/etc/systemd/system/alloy.service.d/override.conf"
     mode: 0644
     owner: root
     group: root
 
-- name: Restart grafana-agent if need
+- name: Restart alloy if need
   become: true
   when: _grafana_agent_configs.changed or _grafana_agent_rivers.changed or _grafana_agent_systemd_dropin.changed
   systemd:
-    name: grafana-agent-flow
+    name: alloy
     daemon_reload: "{{ _grafana_agent_systemd_dropin.changed }}"
     state: restarted

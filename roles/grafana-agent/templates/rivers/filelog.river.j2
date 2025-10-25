@@ -1,3 +1,5 @@
+declare "collect" {
+
 argument "write_to" {
     comment = "Loki remote write url"
 }
@@ -14,4 +16,6 @@ loki.source.file "logs" {
     targets = local.file_match.logfile.targets
     forward_to = [argument.write_to.value]
     tail_from_end = true
+}
+
 }

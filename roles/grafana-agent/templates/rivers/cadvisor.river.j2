@@ -1,3 +1,5 @@
+declare "scrape" {
+
 argument "write_to" {
     comment = "remote write target"
 }
@@ -27,4 +29,6 @@ prometheus.scrape "cadvisor" {
         {"__address__" = "localhost:8080"},
     ]
     forward_to = [prometheus.relabel.cadvisor.receiver]
+}
+
 }

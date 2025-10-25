@@ -16,17 +16,7 @@ grafana_agent_loki_remote:
 
 # Default root directory to place configs for grafana agent.
 # This should not include trailing slash.
-grafana_agent_config_root: "/etc/grafana-agent"
-
-# Version of the agent to be installed.
-# This should not include `v` prefix.
-grafana_agent_version: 0.43.4
-
-# Checksum of deb file of grafana-agent
-# This is a map between cpu arch and corresponding checksum.
-grafana_agent_deb_checksums:
-  amd64: 18946aa55af11ec2cbdd79a406158dbffb98d2062d7af5128f473e189ad99d45
-  arm64: 92e4c0e5e87700130e3556859a660ce3f0176252c77a0f1bd668ad425e15405a
+grafana_agent_config_root: "/etc/alloy"
 
 # Default logging level for agent.
 # Following levels are allowed.
@@ -42,7 +32,7 @@ grafana_agent_additional_args: ""
 # Default groups for the grafana-agent-flow user.
 grafana_agent_user_default_groups:
   - systemd-journal
-  - grafana-agent
+  - alloy
   - adm
 
 # Groups that the grafana-agent-flow user should be belonged to.
@@ -171,29 +161,6 @@ grafana_agent_cadvisor_enabled_metrics: "{{ grafana_agent_cadvisor_default.enabl
 
 # === Configs for journal logs ===
 grafana_agent_journal_excluded_units: []
-
-# === Configs for journal logs ===
-grafana_agent_blackbox_probe_targets: []
-
-grafana_agent_blackbox_exporter_config:
-  modules:
-    http_2xx:
-      prober: http
-      timeout: 1s
-      http:
-        method: GET
-        preferred_ip_protocol: 'ip4'
-    http_2xx_ipv6:
-      prober: http
-      timeout: 1s
-      http:
-        method: GET
-        preferred_ip_protocol: 'ip6'
-    tcp:
-      timeout: 1s
-      prober: tcp
-      tcp:
-        preferred_ip_protocol: 'ip4'
 
 # === Configs for file logs ===
 # Example:
